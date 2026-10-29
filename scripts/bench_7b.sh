@@ -1,7 +1,7 @@
 #!/bin/bash
 # D11：7B Q4_K_M 的受控速度與記憶體量測，方法與 bench_all.sh 完全相同
-BIN=~/ai_learning/llama/llama.cpp/build/bin/llama-bench
-M=~/ai_learning/llama/models
+BIN="${LLAMA_CPP_DIR:-$HOME/ai_learning/llama/llama.cpp}/build/bin/llama-bench"
+M="${MODEL_DIR:-$HOME/ai_learning/llama/models}"
 mkdir -p bench
 tag=7b_q4_k_m; file=qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf
 echo "== $tag =="

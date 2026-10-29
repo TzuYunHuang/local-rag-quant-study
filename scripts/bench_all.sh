@@ -1,6 +1,6 @@
 #!/bin/bash
-BIN=~/ai_learning/llama/llama.cpp/build/bin/llama-bench
-M=~/ai_learning/llama/models
+BIN="${LLAMA_CPP_DIR:-$HOME/ai_learning/llama/llama.cpp}/build/bin/llama-bench"
+M="${MODEL_DIR:-$HOME/ai_learning/llama/models}"
 mkdir -p bench
 for spec in \
   "f16:qwen2.5-3b-instruct-fp16-00001-of-00002.gguf" \

@@ -1,7 +1,7 @@
 #!/bin/bash
-BIN=~/ai_learning/llama/llama.cpp/build/bin/llama-perplexity
-M=~/ai_learning/llama/models
-TXT=~/ai_learning/llama/quant-rag/ppl/wikitext-2-raw/wiki.test.raw
+BIN="${LLAMA_CPP_DIR:-$HOME/ai_learning/llama/llama.cpp}/build/bin/llama-perplexity"
+M="${MODEL_DIR:-$HOME/ai_learning/llama/models}"
+TXT="${WIKITEXT:-ppl/wikitext-2-raw/wiki.test.raw}"   # run from the repo root
 CHUNKS=""   # 空白＝跑完整份；小測試時由外面傳入 --chunks 2
 for spec in \
   "f16:qwen2.5-3b-instruct-fp16-00001-of-00002.gguf" \
