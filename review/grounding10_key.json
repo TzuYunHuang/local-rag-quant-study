@@ -1,0 +1,72 @@
+{
+ "1": {
+  "qid": "Q12",
+  "label": "OB",
+  "model": "q4_k_m",
+  "mode": "oracle",
+  "claude_grounded": 0
+ },
+ "2": {
+  "qid": "Q01",
+  "label": "OB",
+  "model": "q2_k",
+  "mode": "oracle",
+  "claude_grounded": 1
+ },
+ "3": {
+  "qid": "Q05",
+  "label": "OC",
+  "model": "q2_k",
+  "mode": "oracle",
+  "claude_grounded": 0
+ },
+ "4": {
+  "qid": "Q21",
+  "label": "OB",
+  "model": "q2_k",
+  "mode": "oracle",
+  "claude_grounded": 0
+ },
+ "5": {
+  "qid": "Q07",
+  "label": "OB",
+  "model": "q2_k",
+  "mode": "oracle",
+  "claude_grounded": 1
+ },
+ "6": {
+  "qid": "Q05",
+  "label": "RA",
+  "model": "q2_k",
+  "mode": "retrieved",
+  "claude_grounded": 0
+ },
+ "7": {
+  "qid": "Q10",
+  "label": "OC",
+  "model": "q8_0",
+  "mode": "oracle",
+  "claude_grounded": 0
+ },
+ "8": {
+  "qid": "Q33",
+  "label": "OB",
+  "model": "q2_k",
+  "mode": "oracle",
+  "claude_grounded": 1
+ },
+ "9": {
+  "qid": "Q03",
+  "label": "RB",
+  "model": "q2_k",
+  "mode": "retrieved",
+  "claude_grounded": 1
+ },
+ "10": {
+  "qid": "Q31",
+  "label": "OB",
+  "model": "q4_k_m",
+  "mode": "oracle",
+  "claude_grounded": 1
+ }
+}

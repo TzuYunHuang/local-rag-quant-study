@@ -1,0 +1,212 @@
+{
+ "1": {
+  "qid": "Q08",
+  "label": "RC",
+  "model": "q4_k_m",
+  "mode": "retrieved",
+  "claude": 0
+ },
+ "2": {
+  "qid": "Q32",
+  "label": "RC",
+  "model": "q4_k_m",
+  "mode": "retrieved",
+  "claude": 0
+ },
+ "3": {
+  "qid": "Q30",
+  "label": "RD",
+  "model": "q2_k",
+  "mode": "retrieved",
+  "claude": 0
+ },
+ "4": {
+  "qid": "Q35",
+  "label": "RB",
+  "model": "q2_k",
+  "mode": "retrieved",
+  "claude": 0
+ },
+ "5": {
+  "qid": "Q03",
+  "label": "OC",
+  "model": "q2_k",
+  "mode": "oracle",
+  "claude": 1
+ },
+ "6": {
+  "qid": "Q34",
+  "label": "OC",
+  "model": "q4_k_m",
+  "mode": "oracle",
+  "claude": 2
+ },
+ "7": {
+  "qid": "Q32",
+  "label": "OB",
+  "model": "q8_0",
+  "mode": "oracle",
+  "claude": 2
+ },
+ "8": {
+  "qid": "Q17",
+  "label": "RA",
+  "model": "f16",
+  "mode": "retrieved",
+  "claude": 0
+ },
+ "9": {
+  "qid": "Q01",
+  "label": "OB",
+  "model": "q2_k",
+  "mode": "oracle",
+  "claude": 2
+ },
+ "10": {
+  "qid": "Q27",
+  "label": "RA",
+  "model": "q4_k_m",
+  "mode": "retrieved",
+  "claude": 1
+ },
+ "11": {
+  "qid": "Q22",
+  "label": "OD",
+  "model": "q8_0",
+  "mode": "oracle",
+  "claude": 2
+ },
+ "12": {
+  "qid": "Q34",
+  "label": "OB",
+  "model": "q8_0",
+  "mode": "oracle",
+  "claude": 1
+ },
+ "13": {
+  "qid": "Q23",
+  "label": "RD",
+  "model": "q2_k",
+  "mode": "retrieved",
+  "claude": 1
+ },
+ "14": {
+  "qid": "Q02",
+  "label": "RB",
+  "model": "q8_0",
+  "mode": "retrieved",
+  "claude": 1
+ },
+ "15": {
+  "qid": "Q31",
+  "label": "OA",
+  "model": "f16",
+  "mode": "oracle",
+  "claude": 2
+ },
+ "16": {
+  "qid": "Q18",
+  "label": "OB",
+  "model": "q4_k_m",
+  "mode": "oracle",
+  "claude": 1
+ },
+ "17": {
+  "qid": "Q07",
+  "label": "OD",
+  "model": "q8_0",
+  "mode": "oracle",
+  "claude": 2
+ },
+ "18": {
+  "qid": "Q13",
+  "label": "OC",
+  "model": "q2_k",
+  "mode": "oracle",
+  "claude": 0
+ },
+ "19": {
+  "qid": "Q39",
+  "label": "RB",
+  "model": "q2_k",
+  "mode": "retrieved",
+  "claude": 1
+ },
+ "20": {
+  "qid": "Q04",
+  "label": "OD",
+  "model": "q8_0",
+  "mode": "oracle",
+  "claude": 2
+ },
+ "21": {
+  "qid": "Q18",
+  "label": "RA",
+  "model": "q2_k",
+  "mode": "retrieved",
+  "claude": 0
+ },
+ "22": {
+  "qid": "Q27",
+  "label": "RB",
+  "model": "q2_k",
+  "mode": "retrieved",
+  "claude": 2
+ },
+ "23": {
+  "qid": "Q29",
+  "label": "OD",
+  "model": "q4_k_m",
+  "mode": "oracle",
+  "claude": 1
+ },
+ "24": {
+  "qid": "Q09",
+  "label": "RB",
+  "model": "q2_k",
+  "mode": "retrieved",
+  "claude": 2
+ },
+ "25": {
+  "qid": "Q11",
+  "label": "OB",
+  "model": "q8_0",
+  "mode": "oracle",
+  "claude": 2
+ },
+ "26": {
+  "qid": "Q37",
+  "label": "RA",
+  "model": "q2_k",
+  "mode": "retrieved",
+  "claude": 1
+ },
+ "27": {
+  "qid": "Q22",
+  "label": "RA",
+  "model": "q4_k_m",
+  "mode": "retrieved",
+  "claude": 0
+ },
+ "28": {
+  "qid": "Q10",
+  "label": "OD",
+  "model": "f16",
+  "mode": "oracle",
+  "claude": 1
+ },
+ "29": {
+  "qid": "Q20",
+  "label": "RB",
+  "model": "q2_k",
+  "mode": "retrieved",
+  "claude": 0
+ },
+ "30": {
+  "qid": "Q12",
+  "label": "OA",
+  "model": "q2_k",
+  "mode": "oracle",
+  "claude": 0
+ }
+}

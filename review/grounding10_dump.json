@@ -1,0 +1,207 @@
+[
+ {
+  "n": 1,
+  "qid": "Q12",
+  "label": "OB",
+  "type": "compare",
+  "question": "How do TFLite dynamic range, full integer and float16 quantization compare in size reduction and hardware?",
+  "gold": "Dynamic range: 4x smaller, 2x-3x speedup, CPU. Full integer: 4x smaller, 3x+ speedup, CPU, Edge TPU and microcontrollers. Float16: 2x smaller with GPU acceleration, CPU and GPU.",
+  "answer": "TFLite dynamic range quantization reduces the model size by 4x and provides a 2x-3x speedup, suitable for CPU. Full integer quantization achieves a 4x reduction in size and a 3x+ speedup, supporting CPU, Edge TPU, and microcontrollers. Float16 quantization results in a 2x smaller model with GPU acceleration, offering a 2x-3x speedup for GPU.",
+  "mode": "oracle",
+  "context": [
+   [
+    "tflite__post_training_quantization#000",
+    "Post-training quantization",
+    "Post-training quantization\n\nPost-training quantization is a conversion technique that can reduce model size\nwhile also improving CPU and hardware accelerator latency, with little\ndegradation in model accuracy. You can quantize an already-trained float\nTensorFlow model when you convert it to TensorFlow Lite format using the\n[TensorFlow Lite Converter](../models/convert/).\n\nNote: The procedures on this page require TensorFlow 1.15 or higher.\n\nOptimization Methods\n\nThere are several post-training quantization options to choose from. Here is a\nsummary table of the choices and the benefits they provide:\n\n| Technique            | Benefits                  | Hardware         |\n| -------------------- | ------------------------- | ---------------- |\n| Dynamic range        | 4x smaller, 2x-3x speedup | CPU              |\n: quantization         :                           :                  :\n| Full integer         | 4x smaller, 3x+ speedup   | CPU, Edge TPU,   |\n: quantization         :                           : Microcontrollers :\n| Float16 quantization | 2x smaller, GPU           | CPU, GPU         |\n:                      : acceleration              :                  :\n\nThe following decision tree can help determine which post-training quantization\nmethod is best for your use case:\n\n![post-training optimization options](images/optimization.jpg)"
+   ]
+  ]
+ },
+ {
+  "n": 2,
+  "qid": "Q01",
+  "label": "OB",
+  "type": "fact",
+  "question": "What formula does ONNX Runtime use to map a quantized value back to a floating point value?",
+  "gold": "val_fp32 = scale * (val_quantized - zero_point).",
+  "answer": "ONNX Runtime uses the formula provided in the context to map a quantized value back to a floating point value. The formula is:\n\n```\nval_fp32 = scale * (val_quantized - zero_point)\n``\n\nWhere `scale` and `zero_point` are calculated based on the data range and quantization range, as detailed in the context. The inverse operation is not directly provided, but the original floating point value can be derived from the quantized value using this inverse formula.",
+  "mode": "oracle",
+  "context": [
+   [
+    "ort__quantization#000",
+    "Quantize ONNX models > Quantization Overview",
+    "Quantization Overview\n\nQuantization in ONNX Runtime refers to 8 bit linear quantization of an ONNX model.\n\nDuring quantization, the floating point values are mapped to an 8 bit quantization space of the form:\n `val_fp32 = scale * (val_quantized - zero_point)`\n\n`scale` is a positive real number used to map the floating point numbers to a quantization space. It is calculated as follows:\n\nFor asymmetric quantization:\n ```\n scale = (data_range_max - data_range_min) / (quantization_range_max - quantization_range_min)\n ```\n\nFor symmetric quantization:\n ```\n scale = max(abs(data_range_max), abs(data_range_min)) * 2 / (quantization_range_max - quantization_range_min)\n ```\n\n`zero_point` represents zero in the quantization space. It is important that the floating point zero value be exactly representable in quantization space. This is because zero padding is used in many CNNs. If it is not possible to represent 0 uniquely after quantization, it will result in accuracy errors."
+   ]
+  ]
+ },
+ {
+  "n": 3,
+  "qid": "Q05",
+  "label": "OC",
+  "type": "fact",
+  "question": "Why does the TFLite 8-bit quantization spec force weights to be symmetric with zero-point equal to 0?",
+  "gold": "Weights are multiplied by dynamic activation values, so a non-zero weight zero-point would add an unavoidable runtime cost; forcing it to 0 avoids that cost.",
+  "answer": "The TFLite 8-bit quantization spec forces weights to be symmetric with a zero-point equal to 0 to avoid an unavoidable runtime cost of multiplying the zero-point of the weight with the activation value. This ensures that the quantization is as efficient as possible, avoiding unnecessary computational overhead. Symmetric weights allow for the optimization of the zero-point value, which is an inexpensive way to achieve additional precision.",
+  "mode": "oracle",
+  "context": [
+   [
+    "tflite__quantization_spec#003",
+    "TensorFlow Lite 8-bit quantization specification > Symmetric vs asymmetric",
+    "Symmetric vs asymmetric\n\nActivations are asymmetric: they can have their zero-point anywhere within the\nsigned `int8` range `[-128, 127]`. Many activations are asymmetric in nature and\na zero-point is an relatively inexpensive way to effectively get up to an extra\nbinary bit of precision. Since activations are only multiplied by constant\nweights, the constant zero-point value can be optimized pretty heavily.\n\nWeights are symmetric: forced to have zero-point equal to 0. Weight values are\nmultiplied by dynamic input and activation values. This means that there is an\nunavoidable runtime cost of multiplying the zero-point of the weight with the\nactivation value. By enforcing that zero-point is 0 we can avoid this cost.\n\nExplanation of the math: this is similar to section 2.3 in\n[arXiv:1712.05877](https://arxiv.org/abs/1712.05877), except for the difference\nthat we allow the scale values to be per-axis. This generalizes readily, as\nfollows:\n\n$A$ is a $m \\times n$ matrix of quantized activations. <br />\n$B$ is a $n \\times p$ matrix of quantized weights. <br />\nConsider multiplying the $j$th row of $A$, $a_j$ by the $k$th column of\n$B$, $b_k$, both of length $n$. The quantized integer values and\nzero-points values are $q_a$, $z_a$ and $q_b$, $z_b$ respectively."
+   ]
+  ]
+ },
+ {
+  "n": 4,
+  "qid": "Q21",
+  "label": "OB",
+  "type": "fact",
+  "question": "Why does the PyTorch 2 Export (PT2E) quantization flow claim to be better than FX Graph Mode Quantization?",
+  "gold": "It is expected to have significantly higher model coverage (88% on 14K models), better programmability and a simplified user experience.",
+  "answer": "The PyTorch 2 Export (PT2E) quantization flow is claimed to be better than the FX Graph Mode Quantization because it offers significantly higher model coverage, better programmability, and a simpler user experience. This is indicated by the statement that this flow is expected to have significantly higher model coverage, better programmability, and a simplified user experience compared to the FX Graph Mode Quantization. The tutorial also mentions that the exportable constructs are significantly more extensive for the PT2E flow, which is a key factor in achieving higher coverage.",
+  "mode": "oracle",
+  "context": [
+   [
+    "pytorch__pt2e_quant_ptq#000",
+    "PyTorch 2 Export Post Training Quantization",
+    "PyTorch 2 Export Post Training Quantization\n\n**Author**: [Jerry Zhang](https://github.com/jerryzh168)\n\nThis tutorial introduces the steps to do post training static\nquantization in graph mode based on\n[torch.\\_export.export](https://pytorch.org/docs/main/export.html).\nCompared to [FX Graph Mode\nQuantization](https://pytorch.org/tutorials/prototype/fx_graph_mode_ptq_static.html),\nthis flow is expected to have significantly higher model coverage ([88%\non 14K\nmodels](https://github.com/pytorch/pytorch/issues/93667#issuecomment-1601171596)),\nbetter programmability, and a simplified UX.\n\nExportable by <span class=\"title-ref\">torch.export.export</span> is a\nprerequisite to use the flow, you can find what are the constructs\nthat's supported in [Export\nDB](https://pytorch.org/docs/main/generated/exportdb/index.html).\n\nThe high level architecture of quantization 2 with quantizer could look\nlike this:"
+   ]
+  ]
+ },
+ {
+  "n": 5,
+  "qid": "Q07",
+  "label": "OB",
+  "type": "fact",
+  "question": "What are the two steps of QAT in torchao, and what does each do?",
+  "gold": "Prepare inserts fake quantize operations into linear layers; convert turns the fake quantize operations into actual quantize and dequantize operations after training.",
+  "answer": "In Quantization-Aware Training (QAT) within torchao, the two steps are:\n\n1. **Prepare**: This step inserts fake quantization operations into linear layers. This involves modifying the model to include these operations that simulate the behavior of quantization and dequantization during the training phase.\n\n2. **Convert**: This step transforms the simulated quantization operations into actual quantization and dequantization operations after the training phase. This involves a final step where the dequantization operations are fused with the linear layer, and the model is then ready for quantization.\n\nEach of these steps is crucial for preparing the model to handle quantization during and after training, ensuring the final quantized model can achieve higher accuracies and lower perplexities.",
+  "mode": "oracle",
+  "context": [
+   [
+    "pytorch__qat#000",
+    "Quantization-Aware Training (QAT)",
+    "Quantization-Aware Training (QAT)\n\nQuantization-Aware Training (QAT) refers to applying fake quantization during the\ntraining or fine-tuning process, such that the final quantized model will exhibit\nhigher accuracies and lower perplexities. Fake quantization refers to rounding the float\nvalues to quantized values without actually casting them to dtypes with lower\nbit-widths, in contrast to post-training quantization (PTQ), which does cast the\nquantized values to lower bit-width dtypes, e.g.:\n\n```\n# PTQ: x_q is quantized and cast to int8\n# scale and zero point (zp) refer to parameters used to quantize x_float\n# qmin and qmax refer to the range of quantized values\nx_q = (x_float / scale + zp).round().clamp(qmin, qmax).cast(int8)\n\n# QAT: x_fq is still in float\n# Fake quantize simulates the numerics of quantize + dequantize\nx_fq = (x_float / scale + zp).round().clamp(qmin, qmax)\nx_fq = (x_fq - zp) * scale\n```\n\nQAT typically involves applying a transformation to your model before and after training.\nIn torchao, these are represented as the prepare and convert steps: (1) prepare inserts\nfake quantize operations into linear layers, and (2) convert transforms the fake quantize\noperations to actual quantize and dequantize operations after training, thereby producing\na quantized model (dequantize operations are typically fused with linear after lowering).\nBetween these two steps, training can proceed exactly as before."
+   ]
+  ]
+ },
+ {
+  "n": 6,
+  "qid": "Q05",
+  "label": "RA",
+  "type": "fact",
+  "question": "Why does the TFLite 8-bit quantization spec force weights to be symmetric with zero-point equal to 0?",
+  "gold": "Weights are multiplied by dynamic activation values, so a non-zero weight zero-point would add an unavoidable runtime cost; forcing it to 0 avoids that cost.",
+  "answer": "The TFLite 8-bit quantization spec forces weights to be symmetric with a zero-point equal to 0 to avoid the cost of multiplying the zero-point of the weight with the activation value. This optimization is necessary for the math in the quantization formula, ensuring that the term \\(\\sum_{i=0}^{n} q_{a}^{(i)} z_{b}\\) is computed only once, thus removing an unnecessary runtime cost. This optimization is crucial for maintaining the performance of the quantized model, especially in scenarios where the cost of computing this term is significant.",
+  "mode": "retrieved",
+  "context": [
+   [
+    "tflite__quantization_spec#003",
+    "TensorFlow Lite 8-bit quantization specification > Symmetric vs asymmetric",
+    "Symmetric vs asymmetric\n\nActivations are asymmetric: they can have their zero-point anywhere within the\nsigned `int8` range `[-128, 127]`. Many activations are asymmetric in nature and\na zero-point is an relatively inexpensive way to effectively get up to an extra\nbinary bit of precision. Since activations are only multiplied by constant\nweights, the constant zero-point value can be optimized pretty heavily.\n\nWeights are symmetric: forced to have zero-point equal to 0. Weight values are\nmultiplied by dynamic input and activation values. This means that there is an\nunavoidable runtime cost of multiplying the zero-point of the weight with the\nactivation value. By enforcing that zero-point is 0 we can avoid this cost.\n\nExplanation of the math: this is similar to section 2.3 in\n[arXiv:1712.05877](https://arxiv.org/abs/1712.05877), except for the difference\nthat we allow the scale values to be per-axis. This generalizes readily, as\nfollows:\n\n$A$ is a $m \\times n$ matrix of quantized activations. <br />\n$B$ is a $n \\times p$ matrix of quantized weights. <br />\nConsider multiplying the $j$th row of $A$, $a_j$ by the $k$th column of\n$B$, $b_k$, both of length $n$. The quantized integer values and\nzero-points values are $q_a$, $z_a$ and $q_b$, $z_b$ respectively."
+   ],
+   [
+    "tflite__quantization_spec#005",
+    "TensorFlow Lite 8-bit quantization specification > Symmetric vs asymmetric",
+    "The \\\\(\\sum_{i=0}^{n} q_{a}^{(i)} z_b\\\\) term needs to be computed every inference\nsince the activation changes every inference. By enforcing weights to be\nsymmetric we can remove the cost of this term."
+   ],
+   [
+    "tflite__post_training_quantization#010",
+    "Post-training quantization > Representation for quantized tensors",
+    "Representation for quantized tensors\n\n8-bit quantization approximates floating point values using the following\nformula.\n\n$$real\\_value = (int8\\_value - zero\\_point) \\times scale$$\n\nThe representation has two main parts:\n\n*   Per-axis (aka per-channel) or per-tensor weights represented by int8 two’s\n    complement values in the range [-127, 127] with zero-point equal to 0.\n\n*   Per-tensor activations/inputs represented by int8 two’s complement values in\n    the range [-128, 127], with a zero-point in range [-128, 127].\n\nFor a detailed view of our quantization scheme, please see our\n[quantization spec](./quantization_spec). Hardware vendors who want to plug\ninto TensorFlow Lite's delegate interface are encouraged to implement the\nquantization scheme described there."
+   ],
+   [
+    "tflite__post_training_quantization#008",
+    "Post-training quantization > Integer only: 16-bit activations with 8-bit weights (experimental)",
+    "If 16x8 quantization is not supported for some operators in the model,\nthen the model still can be quantized, but unsupported operators kept in float.\nThe following option should be added to the target_spec to allow this.\n<pre>\nimport tensorflow as tf\nconverter = tf.lite.TFLiteConverter.from_saved_model(saved_model_dir)\nconverter.representative_dataset = representative_dataset\nconverter.optimizations = [tf.lite.Optimize.DEFAULT]\nconverter.target_spec.supported_ops = [tf.lite.OpsSet.EXPERIMENTAL_TFLITE_BUILTINS_ACTIVATIONS_INT16_WEIGHTS_INT8,\n<b>tf.lite.OpsSet.TFLITE_BUILTINS</b>]\ntflite_quant_model = converter.convert()\n</pre>\n\nExamples of the use cases where accuracy improvements provided by this\nquantization scheme include:\n\n*   super-resolution,\n*   audio signal processing such as noise cancelling and beamforming,\n*   image de-noising,\n*   HDR reconstruction from a single image.\n\nThe disadvantage of this quantization is:\n\n*   Currently inference is noticeably slower than 8-bit full integer due to the\n    lack of optimized kernel implementation.\n*   Currently it is incompatible with the existing hardware accelerated TFLite\n    delegates.\n\nNote: This is an experimental feature.\n\nA tutorial for this quantization mode can be found\n[here](post_training_integer_quant_16x8.ipynb)."
+   ]
+  ]
+ },
+ {
+  "n": 7,
+  "qid": "Q10",
+  "label": "OC",
+  "type": "compare",
+  "question": "How do dynamic and static quantization differ in ONNX Runtime?",
+  "gold": "Dynamic quantization computes activation scale and zero point at inference time, which adds cost but usually gives higher accuracy. Static quantization runs calibration data beforehand and stores the activation parameters as constants in the model.",
+  "answer": "Dynamic quantization calculates quantization parameters (scale and zero point) for activations during the quantization process, which increases inference cost but usually achieves higher accuracy compared to static quantization. Static quantization, on the other hand, involves running the model with calibration data to compute these parameters, which are then written as constants in the quantized model and used for all inputs.",
+  "mode": "oracle",
+  "context": [
+   [
+    "ort__quantization#006",
+    "Quantize ONNX models > Quantizing an ONNX model > Dynamic Quantization",
+    "Dynamic Quantization\n\nThere are two ways of quantizing a model: dynamic and static. Dynamic quantization calculates the\nquantization parameters (scale and zero point) for activations dynamically. These calculations\nincrease the cost of inference, while usually achieve higher accuracy comparing to static ones.\n\nPython API for dynamic quantization is in module `onnxruntime.quantization.quantize`, function `quantize_dynamic()`\n\nStatic Quantization\n\nStatic quantization method first runs the model using a set of inputs called calibration data.\nDuring these runs, we compute the quantization parameters for each activations. These quantization\nparameters are written as constants to the quantized model and used for all inputs. Our\nquantization tool supports three calibration methods: MinMax, Entropy and Percentile. Please refer\nto\n[`calibrate.py`](https://github.com/microsoft/onnxruntime/blob/main/onnxruntime/python/tools/quantization/calibrate.py)\nfor details.\n\nPython API for static quantization is in module `onnxruntime.quantization.quantize`, function\n`quantize_static()`.\nPlease refer to [quantize.py](https://github.com/microsoft/onnxruntime/blob/main/onnxruntime/python/tools/quantization/quantize.py)\nfor details."
+   ]
+  ]
+ },
+ {
+  "n": 8,
+  "qid": "Q33",
+  "label": "OB",
+  "type": "compare",
+  "question": "How do per-tensor and per-axis quantization differ in the TFLite quantization spec?",
+  "gold": "Per-tensor uses one scale and zero-point for the entire tensor. Per-axis uses one scale and zero-point per slice along the quantized dimension, often the output channel of convolution weights, which gives large accuracy improvements.",
+  "answer": "Per-tensor quantization applies a single scale and zero-point value to the entire tensor, while per-axis quantization applies these values on a per-axis basis, specifically for slices in the `quantized_dimension`. In per-tensor quantization, the same scale and zero-point values are used across the entire tensor, whereas in per-axis quantization, different values can be applied for each axis, particularly for the specified dimension. This allows for more granular quantization in TFLite, improving accuracy in specific dimensions or layers.",
+  "mode": "oracle",
+  "context": [
+   [
+    "tflite__quantization_spec#002",
+    "TensorFlow Lite 8-bit quantization specification > Per-axis vs per-tensor",
+    "Per-axis vs per-tensor\n\nPer-tensor quantization means that there will be one scale and/or zero-point per\nentire tensor. Per-axis quantization means that there will be one scale and/or\n`zero_point` per slice in the `quantized_dimension`. The quantized dimension\nspecifies the dimension of the Tensor's shape that the scales and zero-points\ncorrespond to. For example, a tensor `t`, with `dims=[4, 3, 2, 1]` with\nquantization params: `scale=[1.0, 2.0, 3.0]`, `zero_point=[1, 2, 3]`,\n`quantization_dimension=1` will be quantized across the second dimension of `t`:\n\nt[:, 0, :, :] will have scale[0]=1.0, zero_point[0]=1\n    t[:, 1, :, :] will have scale[1]=2.0, zero_point[1]=2\n    t[:, 2, :, :] will have scale[2]=3.0, zero_point[2]=3\n\nOften, the `quantized_dimension` is the `output_channel` of the weights of\nconvolutions, but in theory it can be the dimension that corresponds to each\ndot-product in the kernel implementation, allowing more quantization granularity\nwithout performance implications. This has large improvements to accuracy.\n\nTFLite has per-axis support for a growing number of operations. At the time of\nthis document, support exists for Conv2d and DepthwiseConv2d."
+   ]
+  ]
+ },
+ {
+  "n": 9,
+  "qid": "Q03",
+  "label": "RB",
+  "type": "fact",
+  "question": "Which TFLite post-training quantization method is recommended as a starting point, and why?",
+  "gold": "Dynamic range quantization, because it reduces memory usage and speeds up computation without requiring a representative dataset for calibration.",
+  "answer": "The method recommended as a starting point for post-training quantization is **Dynamic range quantization**. This is because it achieves a 4x reduction in the model size and a 2x-3x speedup, which are significant benefits. Additionally, it supports on-the-fly quantization and dequantization, allowing for mixing of quantized and floating-point kernels, which can improve performance for different parts of the graph. However, it is important to ensure the accuracy of the quantized model, as this method does not retrain the model to compensate for the quantization. Therefore, it is a good starting point for evaluating the benefits of quantization.",
+  "mode": "retrieved",
+  "context": [
+   [
+    "tflite__post_training_integer_quant#013",
+    "Post-training integer quantization > Run the TensorFlow Lite models",
+    "First, we need a function that runs inference with a given model and images, and then returns the predictions:\n\n```python\n# Helper function to run inference on a TFLite model\ndef run_tflite_model(tflite_file, test_image_indices):\n  global test_images\n\n  # Initialize the interpreter\n  interpreter = tf.lite.Interpreter(model_path=str(tflite_file))\n  interpreter.allocate_tensors()\n\n  input_details = interpreter.get_input_details()[0]\n  output_details = interpreter.get_output_details()[0]\n\n  predictions = np.zeros((len(test_image_indices),), dtype=int)\n  for i, test_image_index in enumerate(test_image_indices):\n    test_image = test_images[test_image_index]\n\n    # Check if the input type is quantized, then rescale input data to uint8\n    if input_details['dtype'] == np.uint8:\n      input_scale, input_zero_point = input_details[\"quantization\"]\n      test_image = test_image / input_scale + input_zero_point\n\n    test_image = np.expand_dims(test_image, axis=0).astype(input_details[\"dtype\"])\n    interpreter.set_tensor(input_details[\"index\"], test_image)\n    interpreter.invoke()\n    output = interpreter.get_tensor(output_details[\"index\"])[0]\n\n    predictions[i] = output.argmax()\n\n  return predictions\n```"
+   ],
+   [
+    "tflite__post_training_quant#002",
+    "Post-training dynamic range quantization > Overview",
+    "Overview\n\n[TensorFlow Lite](https://www.tensorflow.org/lite/) now supports\nconverting weights to 8-bit precision as part of model conversion from\ntensorflow graphdefs to TensorFlow Lite's flat buffer format. Dynamic range quantization achieves a 4x reduction in the model size. In addition, TFLite supports on-the-fly quantization and dequantization of activations to allow for:\n\n1.  Using quantized kernels for faster implementation when available.\n2.  Mixing of floating-point kernels with quantized kernels for different parts\n    of the graph.\n\nThe activations are always stored in floating point. For ops that\nsupport quantized kernels, the activations are quantized to 8 bits of precision\ndynamically prior to processing and are de-quantized to float precision after\nprocessing. Depending on the model being converted, this can give a speedup over\npure floating point computation.\n\nIn contrast to\n[quantization aware training](https://github.com/tensorflow/tensorflow/tree/r1.14/tensorflow/contrib/quantize)\n, the weights are quantized post training and the activations are quantized dynamically \nat inference in this method.\nTherefore, the model weights are not retrained to compensate for quantization\ninduced errors. It is important to check the accuracy of the quantized model to\nensure that the degradation is acceptable.\n\nThis tutorial trains an MNIST model from scratch, checks its accuracy in\nTensorFlow, and then converts the model into a Tensorflow Lite flatbuffer\nwith dynamic range quantization. Finally, it checks the\naccuracy of the converted model and compares it to the original float model."
+   ],
+   [
+    "tflite__post_training_quantization#000",
+    "Post-training quantization",
+    "Post-training quantization\n\nPost-training quantization is a conversion technique that can reduce model size\nwhile also improving CPU and hardware accelerator latency, with little\ndegradation in model accuracy. You can quantize an already-trained float\nTensorFlow model when you convert it to TensorFlow Lite format using the\n[TensorFlow Lite Converter](../models/convert/).\n\nNote: The procedures on this page require TensorFlow 1.15 or higher.\n\nOptimization Methods\n\nThere are several post-training quantization options to choose from. Here is a\nsummary table of the choices and the benefits they provide:\n\n| Technique            | Benefits                  | Hardware         |\n| -------------------- | ------------------------- | ---------------- |\n| Dynamic range        | 4x smaller, 2x-3x speedup | CPU              |\n: quantization         :                           :                  :\n| Full integer         | 4x smaller, 3x+ speedup   | CPU, Edge TPU,   |\n: quantization         :                           : Microcontrollers :\n| Float16 quantization | 2x smaller, GPU           | CPU, GPU         |\n:                      : acceleration              :                  :\n\nThe following decision tree can help determine which post-training quantization\nmethod is best for your use case:\n\n![post-training optimization options](images/optimization.jpg)"
+   ],
+   [
+    "tflite__post_training_quant#005",
+    "Post-training dynamic range quantization > Run the TFLite models",
+    "Run the TFLite models\n\nRun the TensorFlow Lite model using the Python TensorFlow Lite\nInterpreter.\n\nLoad the model into an interpreter\n\n```python\ninterpreter = tf.lite.Interpreter(model_path=str(tflite_model_file))\ninterpreter.allocate_tensors()\n```\n\n```python\ninterpreter_quant = tf.lite.Interpreter(model_path=str(tflite_model_quant_file))\ninterpreter_quant.allocate_tensors()\n```\n\nTest the model on one image\n\n```python\ntest_image = np.expand_dims(test_images[0], axis=0).astype(np.float32)\n\ninput_index = interpreter.get_input_details()[0][\"index\"]\noutput_index = interpreter.get_output_details()[0][\"index\"]\n\ninterpreter.set_tensor(input_index, test_image)\ninterpreter.invoke()\npredictions = interpreter.get_tensor(output_index)\n```\n\n```python\nimport matplotlib.pylab as plt\n\nplt.imshow(test_images[0])\ntemplate = \"True:{true}, predicted:{predict}\"\n_ = plt.title(template.format(true= str(test_labels[0]),\n                              predict=str(np.argmax(predictions[0]))))\nplt.grid(False)\n```"
+   ]
+  ]
+ },
+ {
+  "n": 10,
+  "qid": "Q31",
+  "label": "OB",
+  "type": "compare",
+  "question": "What is the difference between TFLite integer quantization with float fallback and integer-only quantization?",
+  "gold": "With float fallback, ops without an integer implementation stay in float and the input and output stay float, so the model is not compatible with integer-only devices such as 8-bit microcontrollers or Coral Edge TPU. Integer-only enforces integer quantization for all ops including input and output, for those devices.",
+  "answer": "The difference between TFLite integer quantization with float fallback and integer-only quantization lies in the compatibility of the resulting model with different hardware. In the case of integer with float fallback, the model uses float operators for operations that do not have integer implementations, ensuring smooth conversion to float when needed. This approach makes the model compatible with a wider range of devices and accelerators, including those that support float inputs and outputs. On the other hand, integer-only quantization enforces all operations to be quantized to integer types, specifically using tf.int8 or tf.uint8 for both input and output types. This makes the model compatible only with hardware that supports integer inputs and outputs, such as 8-bit microcontrollers and Coral Edge TPUs.",
+  "mode": "oracle",
+  "context": [
+   [
+    "tflite__post_training_quantization#004",
+    "Post-training quantization > Full integer quantization > Integer with float fallback (using default float input/output)",
+    "Integer with float fallback (using default float input/output)\n\nIn order to fully integer quantize a model, but use float operators when they\ndon't have an integer implementation (to ensure conversion occurs smoothly), use\nthe following steps:\n\n<pre>\nimport tensorflow as tf\nconverter = tf.lite.TFLiteConverter.from_saved_model(saved_model_dir)\n<b>converter.optimizations = [tf.lite.Optimize.DEFAULT]\nconverter.representative_dataset = representative_dataset</b>\ntflite_quant_model = converter.convert()\n</pre>\n\nNote: This `tflite_quant_model` won't be compatible with integer only devices\n(such as 8-bit microcontrollers) and accelerators (such as the Coral Edge TPU)\nbecause the input and output still remain float in order to have the same\ninterface as the original float only model."
+   ],
+   [
+    "tflite__post_training_quantization#005",
+    "Post-training quantization > Full integer quantization > Integer only",
+    "Integer only\n\n*Creating integer only models is a common use case for\n[TensorFlow Lite for Microcontrollers](https://www.tensorflow.org/lite/microcontrollers)\nand [Coral Edge TPUs](https://coral.ai/).*\n\nNote: Starting TensorFlow 2.3.0, we support the `inference_input_type` and\n`inference_output_type` attributes.\n\nAdditionally, to ensure compatibility with integer only devices (such as 8-bit\nmicrocontrollers) and accelerators (such as the Coral Edge TPU), you can enforce\nfull integer quantization for all ops including the input and output, by using\nthe following steps:\n\n<pre>\nimport tensorflow as tf\nconverter = tf.lite.TFLiteConverter.from_saved_model(saved_model_dir)\nconverter.optimizations = [tf.lite.Optimize.DEFAULT]\nconverter.representative_dataset = representative_dataset\n<b>converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]</b>\n<b>converter.inference_input_type = tf.int8</b>  # or tf.uint8\n<b>converter.inference_output_type = tf.int8</b>  # or tf.uint8\ntflite_quant_model = converter.convert()\n</pre>"
+   ]
+  ]
+ }
+]

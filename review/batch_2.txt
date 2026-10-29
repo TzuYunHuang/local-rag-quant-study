@@ -1,0 +1,678 @@
+##### Q06 [fact]
+QUESTION: What is fake quantization in torchao QAT?
+GOLD: Rounding float values to quantized values without actually casting them to lower bit-width dtypes, so the numerics of quantize and dequantize are simulated during training.
+
+--- RETRIEVED CONTEXT (what the model saw in condition R) ---
+[1] pytorch__qat#007 | Quantization-Aware Training (QAT) > torchao APIs > quantize_ API (recommended)
+```python
+from torchao.quantization import quantize_, Int4WeightOnlyConfig
+from torchao.quantization.qat import IntxFakeQuantizeConfig, QATConfig
+
+model = get_model()
+
+# prepare: swap `torch.nn.Linear` -> `FakeQuantizedLinear`
+activation_config = IntxFakeQuantizeConfig(torch.int8, "per_token", is_symmetric=False)
+weight_config = IntxFakeQuantizeConfig(torch.int4, group_size=32)
+qat_config = QATConfig(
+    activation_config=activation_config,
+    weight_config=weight_config,
+    step="prepare",
+)
+quantize_(model, qat_config)
+
+# train
+train_loop(model)
+
+# convert: (not shown, same as before)
+```
+
+To fake quantize embedding in addition to linear, you can additionally call
+the following with a filter function during the prepare step:
+
+```
+# First apply linear transformation to the model as above
+# Then apply weight-only transformation to embedding layers
+# (activation fake quantization is not supported for embedding layers)
+qat_config = QATConfig(weight_config=weight_config, step="prepare")
+quantize_(m, qat_config, filter_fn=lambda m, _: isinstance(m, torch.nn.Embedding))
+```
+
+<details>
+  <summary><h3>Quantizer API (legacy)</h3></summary>
+
+[2] pytorch__finetuning#009 | (Part 2) Fine-tuning with QAT, QLoRA, and float8 > Quantization-Aware Training (QAT) > Option 3: TorchAO QAT API
+Next, run the prepare step, which fake quantizes the model. In this
+example, we use int8 per token dynamic activations and int4 symmetric
+per group weights as our quantization scheme. Note that although we are
+targeting lower integer precisions, training still performs arithmetic
+in higher float precision (float32) because we are not actually casting
+the fake quantized values.
+
+``` py
+from torchao.quantization import quantize_, Int4WeightOnlyConfig
+from torchao.quantization.qat import QATConfig
+
+model = get_model()
+
+# prepare: swap `torch.nn.Linear` -> `FakeQuantizedLinear`
+base_config = Int4WeightOnlyConfig(group_size=32)
+quantize_(model, QATConfig(base_config, step="prepare"))
+
+# fine-tune
+train_loop(model)
+```
+
+After fine-tuning, we end up with a model in the original high
+precision. This fine-tuned model has the exact same structure as the
+original model. The only difference is the QAT fine-tuned model has
+weights that are more attuned to quantization, which will be beneficial
+later during inference. The next step is to actually quantize the model:
+
+``` py
+from torchao.quantization import Int4WeightOnlyConfig
+
+# convert: swap `FakeQuantizedLinear` -> `torch.nn.Linear`, then quantize using `base_config`
+quantize_(model, QATConfig(base_config, step="convert"))
+
+# inference or generate
+```
+
+[3] pytorch__finetuning#010 | (Part 2) Fine-tuning with QAT, QLoRA, and float8 > Quantization-Aware Training (QAT) > Option 3: TorchAO QAT API
+Now our model is ready for serving, and will typically have higher
+quantized accuracy than if we did not apply the prepare step (fake
+quantization) during fine-tuning.
+
+For full details of using TorchAO's QAT API, please refer to the [QAT
+README](https://github.com/pytorch/ao/blob/main/torchao/quantization/qat/README.md).
+
+<details>
+<summary><a>Alternative Legacy API</a></summary>
+
+The above <span class="title-ref">quantize\_</span> API is the
+recommended flow for using TorchAO QAT. We also offer an alternative
+legacy "quantizer" API for specific quantization schemes, but these are
+not customizable unlike the above example.
+
+``` 
+from torchao.quantization.qat import Int8DynActInt4WeightQATQuantizer
+qat_quantizer = Int8DynActInt4WeightQATQuantizer(group_size=32)
+
+# prepare: insert fake quantization ops
+# swaps `torch.nn.Linear` with `Int8DynActInt4WeightQATLinear`
+model = qat_quantizer.prepare(model)
+
+# train
+train_loop(model)
+
+# convert: transform fake quantization ops into actual quantized ops
+# swaps `Int8DynActInt4WeightQATLinear` with `Int8DynActInt4WeightLinear`
+model = qat_quantizer.convert(model)
+```
+
+</details>
+
+[4] pytorch__qat#006 | Quantization-Aware Training (QAT) > torchao APIs > quantize_ API (recommended)
+- [`IntxWeightOnlyConfig`](https://docs.pytorch.org/ao/main/generated/torchao.quantization.IntxWeightOnlyConfig.html)
+
+For example (most use cases):
+
+```python
+from torchao.quantization import quantize_, Int4WeightOnlyConfig
+from torchao.quantization.qat import QATConfig
+
+model = get_model()
+
+# prepare: swap `torch.nn.Linear` -> `FakeQuantizedLinear`
+base_config = Int4WeightOnlyConfig(group_size=32)
+quantize_(model, QATConfig(base_config, step="prepare"))
+
+# train
+train_loop(model)
+
+# convert: swap `FakeQuantizedLinear` -> `torch.nn.Linear`, then quantize using `base_config`
+quantize_(model, QATConfig(base_config, step="convert"))
+
+# inference or generate
+```
+
+The `quantize_` API also allows more general quantization settings that
+may not have a corresponding PTQ base config, e.g. for experimentation
+purposes. Users can specify custom fake quantization configs for activations
+and/or weights. For example, the following usage is numerically equivalent
+to the above:
+
+--- ANSWERS, condition R ---
+RA: Fake quantization in torchao QAT is a process where the model's activations and weights are temporarily quantized to lower integer precisions during training. This allows the model to learn to be more efficient in lower precision, even though the model itself is trained in higher precision (typically float32). This technique is used to prepare the model for quantization at inference time, where it can operate more efficiently with lower precision.
+RB: Fake quantization in the context of TorchAO QAT involves applying a transformation to the model to prepare it for quantization. This is done using the `quantize_` API, where the model's activations and weights are configured to be quantized. The `quantize_` API allows for more general quantization settings that may not have a corresponding PyTorch Quantization (PTQ) configuration, providing flexibility for experimentation. The provided context describes different configurations and steps to achieve this, including specifying activation and weight configurations, and applying these configurations during the `prepare` step. Fake quantization is a key component in TorchAO QAT for fine-tuning models to improve quantized accuracy.
+RC: Fake quantization in torchao QAT is a process where the model's activations and weights are temporarily quantized to lower integer precisions during training. This allows the model to learn to be more efficient in lower precision, even though the model itself is trained in higher precision (typically float32). This technique is used to prepare the model for quantization at inference time, where it can operate more efficiently with lower precision.
+RD: Fake quantization in torchao QAT is a technique used to prepare the model for quantization by applying quantization operations (like fake quantizers) to the model during the training phase. This allows the model to perform arithmetic in higher precision (like float32) but with the weights and activations quantized to lower precision (like int8 or int4). This helps the model to be more attuned to quantization during inference.
+--- ORACLE CONTEXT (condition O) = ['pytorch__qat#000']; extra chunks below ---
+pytorch__qat#000 | Quantization-Aware Training (QAT)
+Quantization-Aware Training (QAT)
+
+Quantization-Aware Training (QAT) refers to applying fake quantization during the
+training or fine-tuning process, such that the final quantized model will exhibit
+higher accuracies and lower perplexities. Fake quantization refers to rounding the float
+values to quantized values without actually casting them to dtypes with lower
+bit-widths, in contrast to post-training quantization (PTQ), which does cast the
+quantized values to lower bit-width dtypes, e.g.:
+
+```
+# PTQ: x_q is quantized and cast to int8
+# scale and zero point (zp) refer to parameters used to quantize x_float
+# qmin and qmax refer to the range of quantized values
+x_q = (x_float / scale + zp).round().clamp(qmin, qmax).cast(int8)
+
+# QAT: x_fq is still in float
+# Fake quantize simulates the numerics of quantize + dequantize
+x_fq = (x_float / scale + zp).round().clamp(qmin, qmax)
+x_fq = (x_fq - zp) * scale
+```
+
+QAT typically involves applying a transformation to your model before and after training.
+In torchao, these are represented as the prepare and convert steps: (1) prepare inserts
+fake quantize operations into linear layers, and (2) convert transforms the fake quantize
+operations to actual quantize and dequantize operations after training, thereby producing
+a quantized model (dequantize operations are typically fused with linear after lowering).
+Between these two steps, training can proceed exactly as before.
+
+--- ANSWERS, condition O ---
+OA: In torchao Quantization-Aware Training (QAT), fake quantization involves rounding the float values to quantized values without actually casting them to lower bit-width dtypes. This is done to simulate the numerics of quantize and dequantize operations during the training process.
+OB: In Quantization-Aware Training (QAT) within torchao, fake quantization involves inserting operations into linear layers that simulate the numerics of quantization and dequantization. This allows the training process to proceed as usual, with the final model being a quantized version, though the actual quantization and dequantization are not performed until the conversion step. The conversion process then transforms these simulated operations into actual quantization and dequantization, producing a quantized model.
+OC: In torchao Quantization-Aware Training (QAT), fake quantization involves rounding the float values to quantized values without actually casting them to lower bit-width dtypes. This is done to simulate the numerics of quantize and dequantize operations during the training process.
+OD: In torchao Quantization-Aware Training (QAT), fake quantization involves rounding the float values to quantized values without actually casting them to lower bit-width dtypes. This is done to simulate the numerics of quantize and dequantize operations during the training process.
+
+##### Q07 [fact]
+QUESTION: What are the two steps of QAT in torchao, and what does each do?
+GOLD: Prepare inserts fake quantize operations into linear layers; convert turns the fake quantize operations into actual quantize and dequantize operations after training.
+
+--- RETRIEVED CONTEXT (what the model saw in condition R) ---
+[1] pytorch__qat#002 | Quantization-Aware Training (QAT) > torchao APIs
+torchao APIs
+
+torchao currently supports two QAT APIs, one through the [`quantize_`](https://pytorch.org/ao/stable/generated/torchao.quantization.quantize_.html#torchao.quantization.quantize_)
+API (recommended) and one through the Quantizer classes (legacy). The `quantize_` API
+allows flexible configuration of quantization settings for both activations and weights,
+while the Quantizer classes each hardcode a specific quantization setting.
+
+For example, running QAT on a single GPU:
+
+[2] pytorch__qat#004 | Quantization-Aware Training (QAT) > torchao APIs > quantize_ API (recommended)
+quantize_ API (recommended)
+
+The recommended way to run QAT in torchao is through the `quantize_` API.
+
+1. **Prepare:** The main [`QATConfig`](https://docs.pytorch.org/ao/main/generated/torchao.quantization.qat.QATConfig.html)
+accepts a post-training quantization (PTQ) config and automatically infers
+the corresponding fake quantization configs to use.
+2. **Convert:** quantize the model using the base config provided
+
+[3] pytorch__finetuning#010 | (Part 2) Fine-tuning with QAT, QLoRA, and float8 > Quantization-Aware Training (QAT) > Option 3: TorchAO QAT API
+Now our model is ready for serving, and will typically have higher
+quantized accuracy than if we did not apply the prepare step (fake
+quantization) during fine-tuning.
+
+For full details of using TorchAO's QAT API, please refer to the [QAT
+README](https://github.com/pytorch/ao/blob/main/torchao/quantization/qat/README.md).
+
+<details>
+<summary><a>Alternative Legacy API</a></summary>
+
+The above <span class="title-ref">quantize\_</span> API is the
+recommended flow for using TorchAO QAT. We also offer an alternative
+legacy "quantizer" API for specific quantization schemes, but these are
+not customizable unlike the above example.
+
+``` 
+from torchao.quantization.qat import Int8DynActInt4WeightQATQuantizer
+qat_quantizer = Int8DynActInt4WeightQATQuantizer(group_size=32)
+
+# prepare: insert fake quantization ops
+# swaps `torch.nn.Linear` with `Int8DynActInt4WeightQATLinear`
+model = qat_quantizer.prepare(model)
+
+# train
+train_loop(model)
+
+# convert: transform fake quantization ops into actual quantized ops
+# swaps `Int8DynActInt4WeightQATLinear` with `Int8DynActInt4WeightLinear`
+model = qat_quantizer.convert(model)
+```
+
+</details>
+
+[4] pytorch__first_quantization_example#006 | First Quantization Example > Next Steps
+Next Steps
+
+In this tutorial, we learned how to quantize a simple model with
+torchao. To learn more about the different workflows supported in
+torchao, see our main
+[README](https://github.com/pytorch/ao/blob/main/README.md). For a more
+detailed overview of quantization in torchao, visit [this
+page](../contributing/quantization_overview.html).
+
+Finally, if you would like to contribute to torchao, don't forget to
+check out our [contributor
+guide](../contributing/contributor_guide.html) and our list of [good
+first
+issues](https://github.com/pytorch/ao/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22good%20first%20issue%22)
+on Github!
+
+--- ANSWERS, condition R ---
+RA: The two steps of Quantization-Aware Training (QAT) in torchao are:
+
+1. **Prepare:** This step involves configuring the model for quantization. The `QATConfig` accepts a post-training quantization (PTQ) config and automatically infers the corresponding fake quantization configs to use. This prepares the model for the quantization process.
+
+2. **Convert:** After the model is prepared, the next step is to convert the fake quantization operations into actual quantized operations. This involves transforming the fake quantization ops into actual quantized ops, which finalizes the model for quantization.
+RB: The two steps of Quantization-Aware Training (QAT) in torchao are:
+
+1. **Prepare:** The main `QATConfig` accepts a post-training quantization (PTQ) config and automatically infers the corresponding fake quantization configs to use. This involves preparing the model by inserting fake quantization operations, which involves swapping `torch.nn.Linear` with `Int8DynActInt4WeightQATLinear` for the prepare step.
+
+2. **Convert:** This step involves transforming the fake quantization operations into actual quantized operations. This is done by swapping `Int8DynActInt4WeightQATLinear` with `Int8DynActInt4WeightLinear` for the convert step.
+
+The first quantization example provided in the documentation demonstrates how to quantize a simple model with torchao, and for a more detailed overview of quantization in torchao, one should visit the documentation page. If one wants to contribute to torchao, they should check out the contributor guide and the list of good first issues on GitHub.
+RC: The two steps of Quantization-Aware Training (QAT) in torchao are:
+
+1. **Prepare:** This step involves configuring the model for quantization. The `QATConfig` accepts a post-training quantization (PTQ) config and automatically infers the corresponding fake quantization configs to use. This prepares the model for the quantization process.
+
+2. **Convert:** After the model is prepared, the fake quantization operations are transformed into actual quantized operations. This step involves swapping the fake quantized layers with their quantized counterparts.
+RD: The two steps of Quantization-Aware Training (QAT) in torchao are:
+
+1. **Prepare:** This step involves configuring the model for quantization. The `QATConfig` accepts a post-training quantization (PTQ) config and automatically infers the corresponding fake quantization configs to use. This prepares the model for the actual quantization process.
+
+2. **Convert:** After the model is prepared, the fake quantization operations are transformed into actual quantized operations. This step involves swapping the fake quantized layers with their quantized counterparts.
+--- ORACLE CONTEXT (condition O) = ['pytorch__qat#000']; extra chunks below ---
+pytorch__qat#000 | Quantization-Aware Training (QAT)
+Quantization-Aware Training (QAT)
+
+Quantization-Aware Training (QAT) refers to applying fake quantization during the
+training or fine-tuning process, such that the final quantized model will exhibit
+higher accuracies and lower perplexities. Fake quantization refers to rounding the float
+values to quantized values without actually casting them to dtypes with lower
+bit-widths, in contrast to post-training quantization (PTQ), which does cast the
+quantized values to lower bit-width dtypes, e.g.:
+
+```
+# PTQ: x_q is quantized and cast to int8
+# scale and zero point (zp) refer to parameters used to quantize x_float
+# qmin and qmax refer to the range of quantized values
+x_q = (x_float / scale + zp).round().clamp(qmin, qmax).cast(int8)
+
+# QAT: x_fq is still in float
+# Fake quantize simulates the numerics of quantize + dequantize
+x_fq = (x_float / scale + zp).round().clamp(qmin, qmax)
+x_fq = (x_fq - zp) * scale
+```
+
+QAT typically involves applying a transformation to your model before and after training.
+In torchao, these are represented as the prepare and convert steps: (1) prepare inserts
+fake quantize operations into linear layers, and (2) convert transforms the fake quantize
+operations to actual quantize and dequantize operations after training, thereby producing
+a quantized model (dequantize operations are typically fused with linear after lowering).
+Between these two steps, training can proceed exactly as before.
+
+--- ANSWERS, condition O ---
+OA: In torchao, Quantization-Aware Training (QAT) involves two steps: (1) prepare, which inserts fake quantize operations into linear layers, and (2) convert, which transforms the fake quantize operations to actual quantize and dequantize operations after training. The training process itself remains unchanged between these steps.
+OB: In Quantization-Aware Training (QAT) within torchao, the two steps are:
+
+1. **Prepare**: This step inserts fake quantization operations into linear layers. This involves modifying the model to include these operations that simulate the behavior of quantization and dequantization during the training phase.
+
+2. **Convert**: This step transforms the simulated quantization operations into actual quantization and dequantization operations after the training phase. This involves a final step where the dequantization operations are fused with the linear layer, and the model is then ready for quantization.
+
+Each of these steps is crucial for preparing the model to handle quantization during and after training, ensuring the final quantized model can achieve higher accuracies and lower perplexities.
+OC: In torchao, the two steps of Quantization-Aware Training (QAT) are:
+
+1. **Prepare**: This step inserts fake quantize operations into linear layers of the model. This allows the model to be trained as if it were quantized, but without actually changing the data types to lower bit-widths.
+
+2. **Convert**: After training, this step transforms the fake quantize operations into actual quantize and dequantize operations. This step is crucial for producing a quantized model, as it replaces the fake quantize operations with the actual quantization and dequantization that would be used in a post-training quantization process.
+OD: In torchao, the two steps of Quantization-Aware Training (QAT) are:
+
+1. **Prepare**: This step inserts fake quantize operations into linear layers of the model. This allows the model to be trained as if it were quantized, but without actually changing the data types of the weights and activations.
+
+2. **Convert**: After training, this step transforms the fake quantize operations into actual quantize and dequantize operations. This step is crucial for producing a quantized model, as it replaces the fake quantize operations with the actual quantization and dequantization that would be used in a post-training quantization process.
+
+##### Q08 [fact]
+QUESTION: Where is PyTorch centralizing its quantization development?
+GOLD: In the torchao project (pytorch/ao); the old torch.ao.quantization flows are being migrated there.
+
+--- RETRIEVED CONTEXT (what the model saw in condition R) ---
+[1] pytorch__pt2e_quant_ptq#006 | PyTorch 2 Export Post Training Quantization > Motivation of PyTorch 2 Export Quantization
+- **Programmability** (addressing 1. and 2.): When a user’s quantization
+  needs are not covered by available quantizers, users can build their
+  own quantizer and compose it with other quantizers as mentioned above.
+
+- **Simplified UX** (addressing 3.): Provides a single instance with
+  which both backend and users interact. Thus you no longer have the
+  user facing quantization config mapping to map users intent and a
+  separate quantization config that backends interact with to configure
+  what backend support. We will still have a method for users to query
+  what is supported in a quantizer. With a single instance, composing
+  different quantization capabilities also becomes more natural than
+  previously.
+
+For example XNNPACK does not support `embedding_byte` and we have
+  natively support for this in ExecuTorch. Thus, if we had
+  `ExecuTorchQuantizer` that only quantized `embedding_byte`, then it
+  can be composed with `XNNPACKQuantizer`. (Previously, this used to be
+  concatenating the two `BackendConfig` together and since options in
+  `QConfigMapping` are not backend specific, user also need to figure
+  out how to specify the configurations by themselves that matches the
+  quantization capabilities of the combined backend. With a single
+  quantizer instance, we can compose two quantizers and query the
+  composed quantizer for capabilities, which makes it less error prone
+  and cleaner, for example,
+  `composed_quantizer.quantization_capabilities())`.
+
+[2] pytorch__pt2e_quant_x86_inductor#001 | PyTorch 2 Export Quantization with X86 Backend through Inductor > Introduction
+Introduction
+
+This tutorial introduces the steps for utilizing the PyTorch 2 Export
+Quantization flow to generate a quantized model customized for the x86
+inductor backend and explains how to lower the quantized model into the
+inductor.
+
+The pytorch 2 export quantization flow uses the torch.export to capture
+the model into a graph and perform quantization transformations on top
+of the ATen graph. This approach is expected to have significantly
+higher model coverage, better programmability, and a simplified UX.
+TorchInductor is the new compiler backend that compiles the FX Graphs
+generated by TorchDynamo into optimized C++/Triton kernels.
+
+This flow of quantization 2 with Inductor supports both static and
+dynamic quantization. Static quantization works best for CNN models,
+like ResNet-50. And dynamic quantization is more suitable for NLP
+models, like RNN and BERT. For the difference between the two
+quantization types, please refer to the [following
+page](https://pytorch.org/docs/stable/quantization.html#quantization-mode-support).
+
+The quantization flow mainly includes three steps:
+
+- Step 1: Capture the FX Graph from the eager Model based on the [torch
+  export mechanism](https://pytorch.org/docs/main/export.html).
+- Step 2: Apply the Quantization flow based on the captured FX Graph,
+  including defining the backend-specific quantizer, generating the
+  prepared model with observers, performing the prepared model's
+  calibration or quantization-aware training, and converting the
+  prepared model into the quantized model.
+- Step 3: Lower the quantized model into inductor with the API
+  `torch.compile`.
+
+[3] pytorch__pt2e_quant_x86_inductor#003 | PyTorch 2 Export Quantization with X86 Backend through Inductor > Introduction
+    |                    Lower into Inductor                |
+    —--------------------------------------------------------
+                                |
+                             Inductor
+
+Combining Quantization in PyTorch 2 Export and TorchInductor, we have
+flexibility and productivity with the new Quantization frontend and
+outstanding out-of-box performance with the compiler backend. Especially
+on Intel fourth generation (SPR) Xeon processors which can further boost
+the models' performance by leveraging the
+[advanced-matrix-extensions](https://www.intel.com/content/www/us/en/products/docs/accelerator-engines/advanced-matrix-extensions/overview.html)
+feature.
+
+[4] pytorch__pt2e_quant_x86_inductor#010 | PyTorch 2 Export Quantization with X86 Backend through Inductor > Quantization Aware Training
+Quantization Aware Training
+
+The PyTorch 2 Export Quantization-Aware Training (QAT) is now supported
+on X86 CPU using X86InductorQuantizer, followed by the subsequent
+lowering of the quantized model into Inductor. For a more in-depth
+understanding of PT2 Export Quantization-Aware Training, we recommend
+referring to the dedicated [PyTorch 2 Export Quantization-Aware
+Training](https://pytorch.org/tutorials/prototype/pt2e_quant_qat.html).
+
+The PyTorch 2 Export QAT flow is largely similar to the PTQ flow:
+
+--- ANSWERS, condition R ---
+RA: PyTorch is centralizing its quantization development through the introduction of a single quantizer instance that simplifies the interaction between users and backends. This instance allows for the composition of different quantization capabilities, making it less error-prone and cleaner compared to the previous methods.
+RB: I cannot find this in the provided documents.
+RC: PyTorch is centralizing its quantization development through the introduction of the PyTorch 2 Export Quantization flow, which includes support for both static and dynamic quantization, and utilizes the torch.export mechanism to capture the model into a graph. This flow also integrates with the TorchInductor compiler backend, allowing for the generation of a quantized model customized for the x86 inductor backend. The flow supports programmability and simplifies the user experience by providing a single instance for both backend and user interaction.
+RD: Based on the information provided in the context, PyTorch is centralizing its quantization development through the introduction of the PyTorch 2 Export Quantization flow. This flow includes the use of the `torch.export` mechanism to capture the model into an FX Graph, applying quantization transformations, and then using the `torch.compile` API to lower the quantized model into the Inductor. This centralized approach allows for a more programmable and simplified user experience in PyTorch for quantization.
+--- ORACLE CONTEXT (condition O) = ['pytorch__quantization#001']; extra chunks below ---
+pytorch__quantization#001 | Quantization
+Quantization
+
+```{eval-rst}
+.. automodule:: torch.ao.quantization
+.. automodule:: torch.ao.quantization.fx
+```
+
+We are centralizing all quantization related development to [torchao](https://github.com/pytorch/ao), please checkout our new doc page: <https://docs.pytorch.org/ao/stable/index.html>
+
+Plan for the existing quantization flows:
+
+1. **Eager mode quantization** (`torch.ao.quantization.quantize`, `torch.ao.quantization.quantize_dynamic`): please migrate to use torchao eager mode [`quantize_`](https://docs.pytorch.org/ao/main/api_reference/generated/torchao.quantization.quantize_.html#torchao.quantization.quantize_) API instead.
+
+2. **FX graph mode quantization** (`torch.ao.quantization.quantize_fx.prepare_fx`, `torch.ao.quantization.quantize_fx.convert_fx`): please migrate to use torchao pt2e quantization API instead (`torchao.quantization.pt2e.quantize_pt2e.prepare_pt2e`, `torchao.quantization.pt2e.quantize_pt2e.convert_pt2e`).
+
+--- ANSWERS, condition O ---
+OA: PyTorch is centralizing its quantization development to [torchao](https://github.com/pytorch/ao).
+OB: PyTorch is centralizing its quantization development to [torchao](https://github.com/pytorch/ao).
+OC: PyTorch is centralizing its quantization development to the [torchao](https://github.com/pytorch/ao) repository. The provided context indicates that all quantization related development is being moved to this central location, with the aim of using the torchao quantization API for existing quantization flows.
+OD: PyTorch is centralizing its quantization development to [torchao](https://github.com/pytorch/ao).
+
+##### Q09 [compare]
+QUESTION: What is the difference between post-training quantization and quantization-aware training?
+GOLD: PTQ quantizes an already-trained model without retraining and may lose accuracy, especially on small networks. QAT applies fake quantization during training or fine-tuning so the final quantized model has higher accuracy, but needs changes to the training process.
+
+--- RETRIEVED CONTEXT (what the model saw in condition R) ---
+[1] tflite__post_training_quantization#000 | Post-training quantization
+Post-training quantization
+
+Post-training quantization is a conversion technique that can reduce model size
+while also improving CPU and hardware accelerator latency, with little
+degradation in model accuracy. You can quantize an already-trained float
+TensorFlow model when you convert it to TensorFlow Lite format using the
+[TensorFlow Lite Converter](../models/convert/).
+
+Note: The procedures on this page require TensorFlow 1.15 or higher.
+
+Optimization Methods
+
+There are several post-training quantization options to choose from. Here is a
+summary table of the choices and the benefits they provide:
+
+| Technique            | Benefits                  | Hardware         |
+| -------------------- | ------------------------- | ---------------- |
+| Dynamic range        | 4x smaller, 2x-3x speedup | CPU              |
+: quantization         :                           :                  :
+| Full integer         | 4x smaller, 3x+ speedup   | CPU, Edge TPU,   |
+: quantization         :                           : Microcontrollers :
+| Float16 quantization | 2x smaller, GPU           | CPU, GPU         |
+:                      : acceleration              :                  :
+
+The following decision tree can help determine which post-training quantization
+method is best for your use case:
+
+![post-training optimization options](images/optimization.jpg)
+
+[2] tflite__model_optimization#005 | Model optimization > Types of optimization > Quantization
+Below are the latency and accuracy results for post-training quantization and
+quantization-aware training on a few models. All latency numbers are measured on
+Pixel 2 devices using a single big core CPU. As the toolkit improves, so will
+the numbers here:
+
+<figure>
+  <table>
+    <tr>
+      <th>Model</th>
+      <th>Top-1 Accuracy (Original) </th>
+      <th>Top-1 Accuracy (Post Training Quantized) </th>
+      <th>Top-1 Accuracy (Quantization Aware Training) </th>
+      <th>Latency (Original) (ms) </th>
+      <th>Latency (Post Training Quantized) (ms) </th>
+      <th>Latency (Quantization Aware Training) (ms) </th>
+      <th> Size (Original) (MB)</th>
+      <th> Size (Optimized) (MB)</th>
+    </tr> <tr><td>Mobilenet-v1-1-224</td><td>0.709</td><td>0.657</td><td>0.70</td>
+      <td>124</td><td>112</td><td>64</td><td>16.9</td><td>4.3</td></tr>
+    <tr><td>Mobilenet-v2-1-224</td><td>0.719</td><td>0.637</td><td>0.709</td>
+      <td>89</td><td>98</td><td>54</td><td>14</td><td>3.6</td></tr>
+
+[3] pytorch__qat#000 | Quantization-Aware Training (QAT)
+Quantization-Aware Training (QAT)
+
+Quantization-Aware Training (QAT) refers to applying fake quantization during the
+training or fine-tuning process, such that the final quantized model will exhibit
+higher accuracies and lower perplexities. Fake quantization refers to rounding the float
+values to quantized values without actually casting them to dtypes with lower
+bit-widths, in contrast to post-training quantization (PTQ), which does cast the
+quantized values to lower bit-width dtypes, e.g.:
+
+```
+# PTQ: x_q is quantized and cast to int8
+# scale and zero point (zp) refer to parameters used to quantize x_float
+# qmin and qmax refer to the range of quantized values
+x_q = (x_float / scale + zp).round().clamp(qmin, qmax).cast(int8)
+
+# QAT: x_fq is still in float
+# Fake quantize simulates the numerics of quantize + dequantize
+x_fq = (x_float / scale + zp).round().clamp(qmin, qmax)
+x_fq = (x_fq - zp) * scale
+```
+
+QAT typically involves applying a transformation to your model before and after training.
+In torchao, these are represented as the prepare and convert steps: (1) prepare inserts
+fake quantize operations into linear layers, and (2) convert transforms the fake quantize
+operations to actual quantize and dequantize operations after training, thereby producing
+a quantized model (dequantize operations are typically fused with linear after lowering).
+Between these two steps, training can proceed exactly as before.
+
+[4] tflite__model_optimization#004 | Model optimization > Types of optimization > Quantization
+[Quantization-aware training](http://www.tensorflow.org/model_optimization/guide/quantization/training) | Labelled training data           | Up to 75%      | Smallest accuracy loss      | CPU, GPU (Android), EdgeTPU, Hexagon DSP
+
+The following decision tree helps you select the quantization schemes you might
+want to use for your model, simply based on the expected model size and
+accuracy.
+
+![quantization-decision-tree](images/quantization_decision_tree.png)
+
+Below are the latency and accuracy results for post-training quantization and
+quantization-aware training on a few models. All latency numbers are measured on
+Pixel 2 devices using a single big core CPU. As the toolkit improves, so will
+the numbers here:
+
+--- ANSWERS, condition R ---
+RA: Post-training quantization involves quantizing an already-trained model without modifying the training process. It reduces model size and improves latency but may have a slight degradation in accuracy. Quantization-aware training, on the other hand, involves applying fake quantization during the training or fine-tuning process. This method aims to produce a quantized model with higher accuracy and lower perplexities compared to post-training quantization.
+RB: Post-training quantization and quantization-aware training (QAT) are both techniques used to optimize models for reduced size and improved performance, but they approach the process differently. Post-training quantization is a one-time process that converts an already-trained model into a quantized version, which can reduce the model size and improve performance, but it does not require any changes to the training process. In contrast, quantization-aware training involves modifying the training process to include quantization operations, which can lead to better accuracy and lower perplexities, but it requires a more complex and time-consuming training process. The decision between these two methods depends on the specific requirements of the application, such as the desired balance between model size, accuracy, and performance.
+RC: Post-training quantization involves quantizing an already-trained model without modifying the training process. Quantization-aware training, on the other hand, involves applying fake quantization during the training or fine-tuning process. This allows the final quantized model to exhibit higher accuracies and lower perplexities compared to post-training quantization.
+RD: Post-training quantization involves quantizing an already-trained model without modifying the training process. Quantization-aware training, on the other hand, involves applying fake quantization during the training or fine-tuning process. This allows the final quantized model to exhibit higher accuracies and lower perplexities compared to post-training quantization.
+--- ORACLE CONTEXT (condition O) = ['pytorch__qat#000', 'tflite__post_training_quantization#009']; extra chunks below ---
+tflite__post_training_quantization#009 | Post-training quantization > Model accuracy
+Model accuracy
+
+Since weights are quantized post training, there could be an accuracy loss,
+particularly for smaller networks. Pre-trained fully quantized models are
+provided for specific networks on
+[TensorFlow Hub](https://tfhub.dev/s?deployment-format=lite&q=quantized){:.external}.
+It is important to check the accuracy of the quantized model to verify that any
+degradation in accuracy is within acceptable limits. There are tools to evaluate
+[TensorFlow Lite model accuracy](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/lite/tools/evaluation/tasks){:.external}.
+
+Alternatively, if the accuracy drop is too high, consider using
+[quantization aware training](https://www.tensorflow.org/model_optimization/guide/quantization/training)
+. However, doing so requires modifications during model training to add fake
+quantization nodes, whereas the post-training quantization techniques on this
+page use an existing pre-trained model.
+
+--- ANSWERS, condition O ---
+OA: Post-training quantization involves quantizing the model after the training process, which means the original weights are quantized to a lower bit-width, typically 8-bit, and then the model is trained with these quantized weights. This approach can lead to a loss of accuracy, especially for smaller networks. On the other hand, quantization-aware training (QAT) involves quantizing during the training process, using fake quantization to simulate the behavior of quantization and dequantization, which can help maintain or even improve accuracy compared to post-training quantization. In QAT, the original weights are not quantized until the end of the training process, and the model is trained with these quantized weights. Therefore, QAT aims to preserve or enhance accuracy compared to post-training quantization.
+OB: Post-training quantization involves quantizing the model after training is complete, using a process that rounds float values to quantized values without casting them to lower bit-width dtypes. This means the model remains in float format until the final quantization step. Quantization-aware training, on the other hand, applies fake quantization during the training or fine-tuning process. This involves rounding float values to quantized values, simulating the numerics of quantize and dequantize operations, and then converting these operations to actual quantize and dequantize operations after training. This allows the model to be trained with quantized values, leading to potentially higher accuracies and lower perplexities.
+OC: Post-training quantization involves quantizing a pre-trained model after training is complete, which can lead to accuracy loss, especially for smaller networks. Quantization-aware training, on the other hand, applies fake quantization during the training process, which helps in preserving model accuracy.
+OD: Post-training quantization involves quantizing a pre-trained model after training is complete, which can lead to accuracy loss, especially for smaller networks. Quantization-aware training, on the other hand, applies fake quantization during the training process, which helps in preserving model accuracy.
+
+##### Q10 [compare]
+QUESTION: How do dynamic and static quantization differ in ONNX Runtime?
+GOLD: Dynamic quantization computes activation scale and zero point at inference time, which adds cost but usually gives higher accuracy. Static quantization runs calibration data beforehand and stores the activation parameters as constants in the model.
+
+--- RETRIEVED CONTEXT (what the model saw in condition R) ---
+[1] ort__quantization#006 | Quantize ONNX models > Quantizing an ONNX model > Dynamic Quantization
+Dynamic Quantization
+
+There are two ways of quantizing a model: dynamic and static. Dynamic quantization calculates the
+quantization parameters (scale and zero point) for activations dynamically. These calculations
+increase the cost of inference, while usually achieve higher accuracy comparing to static ones.
+
+Python API for dynamic quantization is in module `onnxruntime.quantization.quantize`, function `quantize_dynamic()`
+
+Static Quantization
+
+Static quantization method first runs the model using a set of inputs called calibration data.
+During these runs, we compute the quantization parameters for each activations. These quantization
+parameters are written as constants to the quantized model and used for all inputs. Our
+quantization tool supports three calibration methods: MinMax, Entropy and Percentile. Please refer
+to
+[`calibrate.py`](https://github.com/microsoft/onnxruntime/blob/main/onnxruntime/python/tools/quantization/calibrate.py)
+for details.
+
+Python API for static quantization is in module `onnxruntime.quantization.quantize`, function
+`quantize_static()`.
+Please refer to [quantize.py](https://github.com/microsoft/onnxruntime/blob/main/onnxruntime/python/tools/quantization/quantize.py)
+for details.
+
+[2] ort__quantization#009 | Quantize ONNX models > Quantizing an ONNX model > <a name="qdqdebug"></a>Quantization Debugging > Example
+Example
+
+- Dynamic quantization:
+
+```python
+import onnx
+from onnxruntime.quantization import quantize_dynamic, QuantType
+
+model_fp32 = 'path/to/the/model.onnx'
+model_quant = 'path/to/the/model.quant.onnx'
+quantized_model = quantize_dynamic(model_fp32, model_quant)
+```
+
+- Static quantization: please refer to the [end-to-end examples](https://github.com/microsoft/onnxruntime-inference-examples/tree/main/quantization/image_classification/cpu).
+
+Method selection
+
+The main difference between dynamic and static quantization is how the scale and zero point of activations are calculated. For static quantization, they are calculated in advance (offline) using a calibration data set. The activations thus have the same scale and zero point during each forward pass. For dynamic quantization, they are calculated on-the-fly (online) and are specific for each forward pass. They are thus more accurate but introduce an extra computational overhead.
+
+In general, it is recommended to use dynamic quantization for RNNs and transformer-based models, and static quantization for CNN models.
+
+If neither post-training quantization method can meet your accuracy goal, you can try using quantization-aware training (QAT) to retrain the model. ONNX Runtime does not provide retraining at this time, but you can retrain your models with the original framework and convert them back to ONNX.
+
+[3] pytorch__static_quantization#000 | Static Quantization
+Static Quantization
+
+Static quantization refers to using a fixed quantization range for all
+inputs during inference or generation. Unlike dynamic quantization,
+which dynamically computes new quantization ranges for each new input
+batch, static quantization typically results in more efficient
+computation, potentially at the cost of lower quantized accuracy since
+we cannot adapt to changes in the input distribution on-the-fly.
+
+In static quantization, this fixed quantization range is typically
+calibrated on similar inputs before quantizing the model. During the
+calibration phase, we first insert observers into the model to "observe"
+the distribution of the inputs to be quantized, and use this
+distribution to decide what scales and zero points to ultimately use
+when quantizing the model.
+
+In this tutorial, we walk through an example of how to achieve this in
+torchao. Let's start with our toy linear model:
+
+[4] ort__quantization#008 | Quantize ONNX models > Quantizing an ONNX model > <a name="qdqdebug"></a>Quantization Debugging
+In summary, ONNX Runtimes provides Python APIs for matching up corresponding weights and activation
+tensors between a float32 model and its quantized counterpart. This allows the user to easily
+compare them to locate where are the biggest differences.
+
+Model optimization during quantization creates difficulties for this debugging process though,
+since it may changes the computation graph in a significant way, resulting in a quantized model
+that is drastically different from the original. This makes it hard to match up corresponding
+tensors from the two models. As a result, we recommend performing model optimization during
+pre-processing instead of the quantization process.
+
+--- ANSWERS, condition R ---
+RA: Dynamic quantization calculates quantization parameters (scale and zero point) for activations during inference, while static quantization computes these parameters offline using calibration data and writes them as constants in the quantized model. Dynamic quantization is more accurate but introduces computational overhead, whereas static quantization is more efficient but may have lower accuracy due to fixed parameters.
+RB: Dynamic quantization calculates quantization parameters (scale and zero point) for activations during inference, while static quantization computes these parameters offline using calibration data and writes them as constants in the quantized model. Dynamic quantization is more accurate but introduces computational overhead, whereas static quantization is more efficient but may have lower accuracy due to fixed parameters.
+RC: Dynamic quantization calculates quantization parameters (scale and zero point) for activations during inference, while static quantization computes these parameters offline using calibration data and writes them as constants in the quantized model. Dynamic quantization is more accurate but introduces additional computational overhead, whereas static quantization is more efficient but may have lower accuracy due to fixed quantization ranges.
+RD: Dynamic quantization calculates the quantization parameters (scale and zero point) for activations during the inference process, whereas static quantization requires a calibration phase where the parameters are computed offline using calibration data. Static quantization results in more accurate but less computationally efficient models, while dynamic quantization introduces an overhead for calculating parameters on the fly but achieves higher accuracy. ONNX Runtime supports both methods and provides Python APIs for quantize_dynamic() for dynamic and quantize_static() for static quantization.
+--- ORACLE CONTEXT (condition O) = ['ort__quantization#006']; already shown above ---
+--- ANSWERS, condition O ---
+OA: Dynamic and static quantization in ONNX Runtime differ in how they calculate and apply quantization parameters. In dynamic quantization, the parameters are calculated for activations during the inference process, which can lead to increased inference cost but often results in higher accuracy compared to static quantization. Static quantization, on the other hand, involves calibrating the model using calibration data to determine the quantization parameters, which are then used for all inputs. The Python APIs for these methods are distinct, with dynamic quantization using the `quantize_dynamic()` function and static quantization using the `quantize_static()` function.
+OB: Dynamic quantization calculates quantization parameters (scale and zero point) for activations during the inference process, which increases inference cost but usually achieves higher accuracy compared to static quantization. Static quantization, on the other hand, involves running the model with calibration data to compute quantization parameters, which are then written as constants in the quantized model and used for all inputs.
+OC: Dynamic quantization calculates quantization parameters (scale and zero point) for activations during the quantization process, which increases inference cost but usually achieves higher accuracy compared to static quantization. Static quantization, on the other hand, involves running the model with calibration data to compute these parameters, which are then written as constants in the quantized model and used for all inputs.
+OD: Dynamic quantization calculates quantization parameters (scale and zero point) for activations during the quantization process, which increases inference cost but usually achieves higher accuracy compared to static quantization. Static quantization, on the other hand, involves running the model with calibration data to compute these parameters, which are then written as constants in the quantized model and used for all inputs.

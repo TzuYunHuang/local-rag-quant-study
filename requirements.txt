@@ -1,0 +1,8 @@
+# Versions used for the reported results (Python venv on macOS, Apple M2)
+numpy==2.4.6
+faiss-cpu==1.15.1
+torch==2.12.0
+transformers==5.9.0
+sentence-transformers==6.1.0
+huggingface_hub==1.33.0   # keep <2.0: sentence-transformers/transformers require it
+matplotlib==3.11.0

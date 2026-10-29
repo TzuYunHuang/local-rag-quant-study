@@ -1,0 +1,670 @@
+##### Q31 [compare]
+QUESTION: What is the difference between TFLite integer quantization with float fallback and integer-only quantization?
+GOLD: With float fallback, ops without an integer implementation stay in float and the input and output stay float, so the model is not compatible with integer-only devices such as 8-bit microcontrollers or Coral Edge TPU. Integer-only enforces integer quantization for all ops including input and output, for those devices.
+
+--- RETRIEVED CONTEXT (what the model saw in condition R) ---
+[1] tflite__post_training_quantization#004 | Post-training quantization > Full integer quantization > Integer with float fallback (using default float input/output)
+Integer with float fallback (using default float input/output)
+
+In order to fully integer quantize a model, but use float operators when they
+don't have an integer implementation (to ensure conversion occurs smoothly), use
+the following steps:
+
+<pre>
+import tensorflow as tf
+converter = tf.lite.TFLiteConverter.from_saved_model(saved_model_dir)
+<b>converter.optimizations = [tf.lite.Optimize.DEFAULT]
+converter.representative_dataset = representative_dataset</b>
+tflite_quant_model = converter.convert()
+</pre>
+
+Note: This `tflite_quant_model` won't be compatible with integer only devices
+(such as 8-bit microcontrollers) and accelerators (such as the Coral Edge TPU)
+because the input and output still remain float in order to have the same
+interface as the original float only model.
+
+[2] tflite__post_training_integer_quant#008 | Post-training integer quantization > Convert to a TensorFlow Lite model > Convert using float fallback quantization
+However, to maintain compatibility with applications that traditionally use float model input and output tensors, the TensorFlow Lite Converter leaves the model input and output tensors in float:
+
+```python
+interpreter = tf.lite.Interpreter(model_content=tflite_model_quant)
+input_type = interpreter.get_input_details()[0]['dtype']
+print('input: ', input_type)
+output_type = interpreter.get_output_details()[0]['dtype']
+print('output: ', output_type)
+```
+
+That's usually good for compatibility, but it won't be compatible with devices that perform only integer-based operations, such as the Edge TPU.
+
+Additionally, the above process may leave an operation in float format if TensorFlow Lite doesn't include a quantized implementation for that operation. This strategy allows conversion to complete so you have a smaller and more efficient model, but again, it won't be compatible with integer-only hardware. (All ops in this MNIST model have a quantized implementation.)
+
+So to ensure an end-to-end integer-only model, you need a couple more parameters...
+
+[3] tflite__post_training_quantization#006 | Post-training quantization > Float16 quantization
+Float16 quantization
+
+You can reduce the size of a floating point model by quantizing the weights to
+float16, the IEEE standard for 16-bit floating point numbers. To enable float16
+quantization of weights, use the following steps:
+
+<pre>
+import tensorflow as tf
+converter = tf.lite.TFLiteConverter.from_saved_model(saved_model_dir)
+<b>converter.optimizations = [tf.lite.Optimize.DEFAULT]
+converter.target_spec.supported_types = [tf.float16]</b>
+tflite_quant_model = converter.convert()
+</pre>
+
+The advantages of float16 quantization are as follows:
+
+*   It reduces model size by up to half (since all weights become half of their
+    original size).
+*   It causes minimal loss in accuracy.
+*   It supports some delegates (e.g. the GPU delegate) which can operate
+    directly on float16 data, resulting in faster execution than float32
+    computations.
+
+The disadvantages of float16 quantization are as follows:
+
+*   It does not reduce latency as much as a quantization to fixed point math.
+*   By default, a float16 quantized model will "dequantize" the weights values
+    to float32 when run on the CPU. (Note that the GPU delegate will not perform
+    this dequantization, since it can operate on float16 data.)
+
+[4] tflite__post_training_quantization#008 | Post-training quantization > Integer only: 16-bit activations with 8-bit weights (experimental)
+If 16x8 quantization is not supported for some operators in the model,
+then the model still can be quantized, but unsupported operators kept in float.
+The following option should be added to the target_spec to allow this.
+<pre>
+import tensorflow as tf
+converter = tf.lite.TFLiteConverter.from_saved_model(saved_model_dir)
+converter.representative_dataset = representative_dataset
+converter.optimizations = [tf.lite.Optimize.DEFAULT]
+converter.target_spec.supported_ops = [tf.lite.OpsSet.EXPERIMENTAL_TFLITE_BUILTINS_ACTIVATIONS_INT16_WEIGHTS_INT8,
+<b>tf.lite.OpsSet.TFLITE_BUILTINS</b>]
+tflite_quant_model = converter.convert()
+</pre>
+
+Examples of the use cases where accuracy improvements provided by this
+quantization scheme include:
+
+*   super-resolution,
+*   audio signal processing such as noise cancelling and beamforming,
+*   image de-noising,
+*   HDR reconstruction from a single image.
+
+The disadvantage of this quantization is:
+
+*   Currently inference is noticeably slower than 8-bit full integer due to the
+    lack of optimized kernel implementation.
+*   Currently it is incompatible with the existing hardware accelerated TFLite
+    delegates.
+
+Note: This is an experimental feature.
+
+A tutorial for this quantization mode can be found
+[here](post_training_integer_quant_16x8.ipynb).
+
+--- ANSWERS, condition R ---
+RA: TFLite integer quantization with float fallback allows the use of float operators when integer implementations are not available, ensuring the model can still run smoothly. In contrast, integer-only quantization requires all operations to be quantized to integers, making the model compatible with devices that only support integer operations.
+RB: The key difference is that in TFLite integer quantization with float fallback, the model is quantized but the input and output tensors are still in a float format, allowing the model to maintain compatibility with applications that traditionally use float models. This means the model can be used in environments where float operations are the norm, but the quantization is applied to the weights and activations to reduce the model size and improve efficiency. In contrast, for integer-only quantization, the model is fully quantized, including weights and activations, and the input and output tensors are explicitly set to float16 or 8-bit integers, ensuring compatibility with devices that perform only integer-based operations. This ensures the model can be efficiently used on hardware that supports integer operations.
+RC: Integer with float fallback (using default float input/output) allows the use of float operators when they don't have an integer implementation, ensuring conversion occurs smoothly. In contrast, integer-only quantization aims to create a model that can only use integer operations, which is important for devices that perform only integer-based operations. The latter does not include float input or output, making it incompatible with float model input and output tensors.
+RD: Integer with float fallback (using default float input/output) allows the use of float operators when they don't have an integer implementation, ensuring conversion occurs smoothly. In contrast, integer-only quantization aims to create a model that can only use integer operations, which is important for devices that perform only integer-based operations. The latter does not include float input or output, making it incompatible with float-based applications and some hardware accelerators.
+--- ORACLE CONTEXT (condition O) = ['tflite__post_training_quantization#004', 'tflite__post_training_quantization#005']; extra chunks below ---
+tflite__post_training_quantization#005 | Post-training quantization > Full integer quantization > Integer only
+Integer only
+
+*Creating integer only models is a common use case for
+[TensorFlow Lite for Microcontrollers](https://www.tensorflow.org/lite/microcontrollers)
+and [Coral Edge TPUs](https://coral.ai/).*
+
+Note: Starting TensorFlow 2.3.0, we support the `inference_input_type` and
+`inference_output_type` attributes.
+
+Additionally, to ensure compatibility with integer only devices (such as 8-bit
+microcontrollers) and accelerators (such as the Coral Edge TPU), you can enforce
+full integer quantization for all ops including the input and output, by using
+the following steps:
+
+<pre>
+import tensorflow as tf
+converter = tf.lite.TFLiteConverter.from_saved_model(saved_model_dir)
+converter.optimizations = [tf.lite.Optimize.DEFAULT]
+converter.representative_dataset = representative_dataset
+<b>converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]</b>
+<b>converter.inference_input_type = tf.int8</b>  # or tf.uint8
+<b>converter.inference_output_type = tf.int8</b>  # or tf.uint8
+tflite_quant_model = converter.convert()
+</pre>
+
+--- ANSWERS, condition O ---
+OA: The difference between TFLite integer quantization with float fallback and integer-only quantization lies in the compatibility with devices and accelerators. Integer with float fallback allows the use of float operators when integer implementations are not available, making it smoother for conversion but not compatible with devices that require integer inputs and outputs. In contrast, integer-only quantization ensures that the model is fully quantized to integers, including the input and output, making it compatible with devices like 8-bit microcontrollers and Coral Edge TPUs.
+OB: The difference between TFLite integer quantization with float fallback and integer-only quantization lies in the compatibility of the resulting model with different hardware. In the case of integer with float fallback, the model uses float operators for operations that do not have integer implementations, ensuring smooth conversion to float when needed. This approach makes the model compatible with a wider range of devices and accelerators, including those that support float inputs and outputs. On the other hand, integer-only quantization enforces all operations to be quantized to integer types, specifically using tf.int8 or tf.uint8 for both input and output types. This makes the model compatible only with hardware that supports integer inputs and outputs, such as 8-bit microcontrollers and Coral Edge TPUs.
+OC: The difference between TFLite integer quantization with float fallback and integer-only quantization lies in the compatibility with devices and accelerators. Integer with float fallback allows the use of float operators when integer implementations are not available, making it smoother for conversion but not compatible with devices that require integer inputs and outputs. In contrast, integer-only quantization ensures that the model is fully quantized to integers, including the input and output, making it compatible with devices like 8-bit microcontrollers and Coral Edge TPUs.
+OD: The main difference is that in integer quantization, the model is fully quantized to integer types, including the input and output, while with a float fallback, the model is partially quantized. The float fallback approach allows for the use of floating point operations for the input and output, ensuring compatibility with devices that do not support integer types, but it does not quantize the entire model. In contrast, integer-only quantization requires the model to be fully quantized, including the input and output, which is more restrictive but ensures compatibility with integer-only devices and accelerators.
+
+##### Q32 [compare]
+QUESTION: What data does each TFLite quantization technique need: float16, dynamic range, integer, and quantization-aware training?
+GOLD: Float16 and dynamic range need no data; integer quantization needs an unlabelled representative sample; quantization-aware training needs labelled training data.
+
+--- RETRIEVED CONTEXT (what the model saw in condition R) ---
+[1] tflite__post_training_quantization#001 | Post-training quantization > Dynamic range quantization
+Dynamic range quantization
+
+Dynamic range quantization is a recommended starting point because it provides
+reduced memory usage and faster computation without you having to provide a
+representative dataset for calibration. This type of quantization, statically
+quantizes only the weights from floating point to integer at conversion time,
+which provides 8-bits of precision:
+
+<pre>
+import tensorflow as tf
+converter = tf.lite.TFLiteConverter.from_saved_model(saved_model_dir)
+<b>converter.optimizations = [tf.lite.Optimize.DEFAULT]</b>
+tflite_quant_model = converter.convert()
+</pre>
+
+To further reduce latency during inference, "dynamic-range" operators
+dynamically quantize activations based on their range to 8-bits and perform
+computations with 8-bit weights and activations. This optimization provides
+latencies close to fully fixed-point inferences. However, the outputs are still
+stored using floating point so the increased speed of dynamic-range ops is less
+than a full fixed-point computation.
+
+[2] tflite__post_training_quant#002 | Post-training dynamic range quantization > Overview
+Overview
+
+[TensorFlow Lite](https://www.tensorflow.org/lite/) now supports
+converting weights to 8-bit precision as part of model conversion from
+tensorflow graphdefs to TensorFlow Lite's flat buffer format. Dynamic range quantization achieves a 4x reduction in the model size. In addition, TFLite supports on-the-fly quantization and dequantization of activations to allow for:
+
+1.  Using quantized kernels for faster implementation when available.
+2.  Mixing of floating-point kernels with quantized kernels for different parts
+    of the graph.
+
+The activations are always stored in floating point. For ops that
+support quantized kernels, the activations are quantized to 8 bits of precision
+dynamically prior to processing and are de-quantized to float precision after
+processing. Depending on the model being converted, this can give a speedup over
+pure floating point computation.
+
+In contrast to
+[quantization aware training](https://github.com/tensorflow/tensorflow/tree/r1.14/tensorflow/contrib/quantize)
+, the weights are quantized post training and the activations are quantized dynamically 
+at inference in this method.
+Therefore, the model weights are not retrained to compensate for quantization
+induced errors. It is important to check the accuracy of the quantized model to
+ensure that the degradation is acceptable.
+
+This tutorial trains an MNIST model from scratch, checks its accuracy in
+TensorFlow, and then converts the model into a Tensorflow Lite flatbuffer
+with dynamic range quantization. Finally, it checks the
+accuracy of the converted model and compares it to the original float model.
+
+[3] tflite__post_training_quantization#008 | Post-training quantization > Integer only: 16-bit activations with 8-bit weights (experimental)
+If 16x8 quantization is not supported for some operators in the model,
+then the model still can be quantized, but unsupported operators kept in float.
+The following option should be added to the target_spec to allow this.
+<pre>
+import tensorflow as tf
+converter = tf.lite.TFLiteConverter.from_saved_model(saved_model_dir)
+converter.representative_dataset = representative_dataset
+converter.optimizations = [tf.lite.Optimize.DEFAULT]
+converter.target_spec.supported_ops = [tf.lite.OpsSet.EXPERIMENTAL_TFLITE_BUILTINS_ACTIVATIONS_INT16_WEIGHTS_INT8,
+<b>tf.lite.OpsSet.TFLITE_BUILTINS</b>]
+tflite_quant_model = converter.convert()
+</pre>
+
+Examples of the use cases where accuracy improvements provided by this
+quantization scheme include:
+
+*   super-resolution,
+*   audio signal processing such as noise cancelling and beamforming,
+*   image de-noising,
+*   HDR reconstruction from a single image.
+
+The disadvantage of this quantization is:
+
+*   Currently inference is noticeably slower than 8-bit full integer due to the
+    lack of optimized kernel implementation.
+*   Currently it is incompatible with the existing hardware accelerated TFLite
+    delegates.
+
+Note: This is an experimental feature.
+
+A tutorial for this quantization mode can be found
+[here](post_training_integer_quant_16x8.ipynb).
+
+[4] tflite__post_training_quantization#006 | Post-training quantization > Float16 quantization
+Float16 quantization
+
+You can reduce the size of a floating point model by quantizing the weights to
+float16, the IEEE standard for 16-bit floating point numbers. To enable float16
+quantization of weights, use the following steps:
+
+<pre>
+import tensorflow as tf
+converter = tf.lite.TFLiteConverter.from_saved_model(saved_model_dir)
+<b>converter.optimizations = [tf.lite.Optimize.DEFAULT]
+converter.target_spec.supported_types = [tf.float16]</b>
+tflite_quant_model = converter.convert()
+</pre>
+
+The advantages of float16 quantization are as follows:
+
+*   It reduces model size by up to half (since all weights become half of their
+    original size).
+*   It causes minimal loss in accuracy.
+*   It supports some delegates (e.g. the GPU delegate) which can operate
+    directly on float16 data, resulting in faster execution than float32
+    computations.
+
+The disadvantages of float16 quantization are as follows:
+
+*   It does not reduce latency as much as a quantization to fixed point math.
+*   By default, a float16 quantized model will "dequantize" the weights values
+    to float32 when run on the CPU. (Note that the GPU delegate will not perform
+    this dequantization, since it can operate on float16 data.)
+
+--- ANSWERS, condition R ---
+RA: I cannot find this in the provided documents.
+RB: The context does not provide specific details on what data each TFLite quantization technique needs. Therefore, I cannot find this information in the provided documents.
+RC: For float16 quantization, the model weights are quantized to float16. For dynamic range quantization, activations are dynamically quantized to 8 bits during inference. For integer only quantization, the model weights are quantized to 8-bit integers and activations to 16-bit integers. Quantization-aware training requires retraining the model to compensate for quantization-induced errors.
+RD [TRUNCATED finish=length]: The data requirements for each TFLite quantization technique are as follows:
+
+- **Float16**: The model needs to be quantized to float16, which is a 16-bit floating point format. The model size is reduced by up to half, and the quantization is to float16 weights, which are then dequantized to float32 when run on the CPU.
+
+- **Dynamic Range**: The model needs to be quantized to 8-bit activations and 16-bit weights. The model size is reduced by 4x, and the activations are quantized to 8-bit and dequantized to float precision after processing. The quantization is dynamic and on-the-fly.
+
+- **Integer only (16x8)**: The model needs to be quantized to 16-bit activations and 8-bit weights. The model size is reduced by 16x8, and the quantization is to 16-bit activations and 8-bit weights.
+
+- **Quantization-Aware Training**: The model needs to be quantized to 8-bit weights and 8-bit activations. The quantization is to 8-bit weights and 8-bit activations, and the model size is reduced by 8x8
+--- ORACLE CONTEXT (condition O) = ['tflite__model_optimization#003', 'tflite__model_optimization#004']; extra chunks below ---
+tflite__model_optimization#003 | Model optimization > Types of optimization > Quantization
+The following types of quantization are available in TensorFlow Lite:
+
+Technique                                                                                               | Data requirements                | Size reduction | Accuracy                    | Supported hardware
+------------------------------------------------------------------------------------------------------- | -------------------------------- | -------------- | --------------------------- | ------------------
+[Post-training float16 quantization](post_training_float16_quant.ipynb)                                 | No data                          | Up to 50%      | Insignificant accuracy loss | CPU, GPU
+[Post-training dynamic range quantization](post_training_quant.ipynb)                                   | No data                          | Up to 75%      | Smallest accuracy loss               | CPU, GPU (Android)
+[Post-training integer quantization](post_training_integer_quant.ipynb)                                 | Unlabelled representative sample | Up to 75%      | Small accuracy loss       | CPU, GPU (Android), EdgeTPU, Hexagon DSP
+
+tflite__model_optimization#004 | Model optimization > Types of optimization > Quantization
+[Quantization-aware training](http://www.tensorflow.org/model_optimization/guide/quantization/training) | Labelled training data           | Up to 75%      | Smallest accuracy loss      | CPU, GPU (Android), EdgeTPU, Hexagon DSP
+
+The following decision tree helps you select the quantization schemes you might
+want to use for your model, simply based on the expected model size and
+accuracy.
+
+![quantization-decision-tree](images/quantization_decision_tree.png)
+
+Below are the latency and accuracy results for post-training quantization and
+quantization-aware training on a few models. All latency numbers are measured on
+Pixel 2 devices using a single big core CPU. As the toolkit improves, so will
+the numbers here:
+
+--- ANSWERS, condition O ---
+OA: For Post-training float16 quantization, no data is needed. For Post-training dynamic range quantization, no data is also needed. For Post-training integer quantization, an unlabelled representative sample is required. For quantization-aware training, labelled training data is needed.
+OB: For Post-training float16 quantization, no data is needed. For Post-training dynamic range quantization, no data is also needed. For Post-training integer quantization, an unlabelled representative sample is required. For quantization-aware training, labelled training data is needed.
+OC: The data requirement for each type of TFLite quantization technique is as follows:
+
+- For **post-training float16 quantization** (float16): No data is needed.
+- For **post-training dynamic range quantization** (dynamic range): No data is needed.
+- For **post-training integer quantization** (integer): No data is needed.
+- For **quantization-aware training** (quantization-aware): Labelled training data is needed.
+
+The provided information does not specify the data requirements for the other types of quantization.
+OD: For Post-training float16 quantization, no data is needed. For Post-training dynamic range quantization, no data is also needed. For Post-training integer quantization, an unlabelled representative sample is required. For quantization-aware training, labelled training data is needed.
+
+##### Q33 [compare]
+QUESTION: How do per-tensor and per-axis quantization differ in the TFLite quantization spec?
+GOLD: Per-tensor uses one scale and zero-point for the entire tensor. Per-axis uses one scale and zero-point per slice along the quantized dimension, often the output channel of convolution weights, which gives large accuracy improvements.
+
+--- RETRIEVED CONTEXT (what the model saw in condition R) ---
+[1] tflite__quantization_spec#002 | TensorFlow Lite 8-bit quantization specification > Per-axis vs per-tensor
+Per-axis vs per-tensor
+
+Per-tensor quantization means that there will be one scale and/or zero-point per
+entire tensor. Per-axis quantization means that there will be one scale and/or
+`zero_point` per slice in the `quantized_dimension`. The quantized dimension
+specifies the dimension of the Tensor's shape that the scales and zero-points
+correspond to. For example, a tensor `t`, with `dims=[4, 3, 2, 1]` with
+quantization params: `scale=[1.0, 2.0, 3.0]`, `zero_point=[1, 2, 3]`,
+`quantization_dimension=1` will be quantized across the second dimension of `t`:
+
+t[:, 0, :, :] will have scale[0]=1.0, zero_point[0]=1
+    t[:, 1, :, :] will have scale[1]=2.0, zero_point[1]=2
+    t[:, 2, :, :] will have scale[2]=3.0, zero_point[2]=3
+
+Often, the `quantized_dimension` is the `output_channel` of the weights of
+convolutions, but in theory it can be the dimension that corresponds to each
+dot-product in the kernel implementation, allowing more quantization granularity
+without performance implications. This has large improvements to accuracy.
+
+TFLite has per-axis support for a growing number of operations. At the time of
+this document, support exists for Conv2d and DepthwiseConv2d.
+
+[2] tflite__post_training_quant#002 | Post-training dynamic range quantization > Overview
+Overview
+
+[TensorFlow Lite](https://www.tensorflow.org/lite/) now supports
+converting weights to 8-bit precision as part of model conversion from
+tensorflow graphdefs to TensorFlow Lite's flat buffer format. Dynamic range quantization achieves a 4x reduction in the model size. In addition, TFLite supports on-the-fly quantization and dequantization of activations to allow for:
+
+1.  Using quantized kernels for faster implementation when available.
+2.  Mixing of floating-point kernels with quantized kernels for different parts
+    of the graph.
+
+The activations are always stored in floating point. For ops that
+support quantized kernels, the activations are quantized to 8 bits of precision
+dynamically prior to processing and are de-quantized to float precision after
+processing. Depending on the model being converted, this can give a speedup over
+pure floating point computation.
+
+In contrast to
+[quantization aware training](https://github.com/tensorflow/tensorflow/tree/r1.14/tensorflow/contrib/quantize)
+, the weights are quantized post training and the activations are quantized dynamically 
+at inference in this method.
+Therefore, the model weights are not retrained to compensate for quantization
+induced errors. It is important to check the accuracy of the quantized model to
+ensure that the degradation is acceptable.
+
+This tutorial trains an MNIST model from scratch, checks its accuracy in
+TensorFlow, and then converts the model into a Tensorflow Lite flatbuffer
+with dynamic range quantization. Finally, it checks the
+accuracy of the converted model and compares it to the original float model.
+
+[3] tflite__quantization_spec#006 | TensorFlow Lite 8-bit quantization specification > int8 quantized operator specifications
+int8 quantized operator specifications
+
+Below we describe the quantization requirements for our int8 tflite kernels:
+
+```
+ADD
+  Input 0:
+    data_type  : int8
+    range      : [-128, 127]
+    granularity: per-tensor
+  Input 1:
+    data_type  : int8
+    range      : [-128, 127]
+    granularity: per-tensor
+  Output 0:
+    data_type  : int8
+    range      : [-128, 127]
+    granularity: per-tensor
+
+AVERAGE_POOL_2D
+  Input 0:
+    data_type  : int8
+    range      : [-128, 127]
+    granularity: per-tensor
+  Output 0:
+    data_type  : int8
+    range      : [-128, 127]
+    granularity: per-tensor
+  restriction: Input and outputs must all have same scale/zero_point
+
+CONCATENATION
+  Input ...:
+    data_type  : int8
+    range      : [-128, 127]
+    granularity: per-tensor
+  Output 0:
+    data_type  : int8
+    range      : [-128, 127]
+    granularity: per-tensor
+  restriction: Input and outputs must all have same scale/zero_point
+
+CONV_2D
+  Input 0:
+    data_type  : int8
+    range      : [-128, 127]
+    granularity: per-tensor
+  Input 1 (Weight):
+    data_type  : int8
+    range      : [-127, 127]
+    granularity: per-axis (dim = 0)
+
+[4] tflite__post_training_quantization#010 | Post-training quantization > Representation for quantized tensors
+Representation for quantized tensors
+
+8-bit quantization approximates floating point values using the following
+formula.
+
+$$real\_value = (int8\_value - zero\_point) \times scale$$
+
+The representation has two main parts:
+
+*   Per-axis (aka per-channel) or per-tensor weights represented by int8 two’s
+    complement values in the range [-127, 127] with zero-point equal to 0.
+
+*   Per-tensor activations/inputs represented by int8 two’s complement values in
+    the range [-128, 127], with a zero-point in range [-128, 127].
+
+For a detailed view of our quantization scheme, please see our
+[quantization spec](./quantization_spec). Hardware vendors who want to plug
+into TensorFlow Lite's delegate interface are encouraged to implement the
+quantization scheme described there.
+
+--- ANSWERS, condition R ---
+RA: In TFLite quantization, per-tensor quantization means there is one scale and/or zero-point per entire tensor. Per-axis quantization, on the other hand, means there is one scale and/or zero-point per slice in the quantized dimension. The quantized dimension specifies the dimension of the Tensor's shape that the scales and zero-points correspond to.
+RB: Per-tensor quantization involves one scale and zero-point per entire tensor, while per-axis quantization involves one scale and zero-point per slice in the quantized dimension. In per-tensor quantization, the scale and zero-point are consistent across the entire tensor, whereas in per-axis quantization, these parameters are consistent across slices in the specified dimension.
+RC: Per-tensor quantization uses a single scale and zero-point for the entire tensor, while per-axis quantization uses a scale and zero-point for each slice in the quantized dimension. This means per-axis allows for more quantization granularity without performance implications.
+RD: Per-tensor quantization uses a single scale and zero-point for the entire tensor, while per-axis quantization uses a scale and zero-point for each slice in the specified quantized dimension.
+--- ORACLE CONTEXT (condition O) = ['tflite__quantization_spec#002']; already shown above ---
+--- ANSWERS, condition O ---
+OA: Per-tensor quantization applies a single scale and zero-point to the entire tensor, while per-axis quantization applies a scale and zero-point to each slice along the specified dimension. This allows for more granular quantization in per-axis, potentially improving accuracy.
+OB: Per-tensor quantization applies a single scale and zero-point value to the entire tensor, while per-axis quantization applies these values on a per-axis basis, specifically for slices in the `quantized_dimension`. In per-tensor quantization, the same scale and zero-point values are used across the entire tensor, whereas in per-axis quantization, different values can be applied for each axis, particularly for the specified dimension. This allows for more granular quantization in TFLite, improving accuracy in specific dimensions or layers.
+OC: Per-tensor quantization applies a single scale and zero-point to the entire tensor, while per-axis quantization applies a scale and zero-point to each slice along the specified dimension. This allows for more granular quantization in per-axis, potentially improving accuracy.
+OD: In per-tensor quantization, a single scale and zero-point are applied to the entire tensor. In contrast, per-axis quantization applies a scale and zero-point to each slice along the specified dimension, allowing for more granular quantization.
+
+##### Q34 [compare]
+QUESTION: How do dynamic quantization and weight-only quantization differ in torchao's quantized inference?
+GOLD: Dynamic quantization converts both the input activations and the weights to low precision (for example fp8 rowwise) before the matmul. Weight-only quantization (for example int4) quantizes only the weight and keeps the activations in high precision.
+
+--- RETRIEVED CONTEXT (what the model saw in condition R) ---
+[1] pytorch__inference#000 | Quantized Inference
+Quantized Inference
+
+For inference, we support dynamic and weight-only quantization of `torch.nn.funtional.linear` across various dtype configurations.
+The pseudocode is as follows:
+
+```python
+# high precision (baseline)
+output_bf16 = input_bf16 @ weight_bf16.t()
+
+# dynamic quantization (shown for fp8 rowwise)
+output_bf16 = to_fp8(input_bf16) @ to_fp8(weight_fp8.t())
+
+# weight-only quantization (shown for int4)
+output_bf16 = input_bf16 @ weight_int4.t()
+```
+
+[2] pytorch__inference#001 | Quantized Inference > Inference Workflows
+Inference Workflows
+
+Below are the stable and near-stable inference workflows in torchao:
+
+| weight dtype | act dtype | summary |
+|--------------|-----------|---------|
+| float8 | float8 | {class}`~torchao.quantization.Float8DynamicActivationFloat8WeightConfig`: Applies float8 dynamic symmetric quantization to both activations and weights. Requires CUDA ≥8.9, AMD MI350+, or Intel XPU. Supports `PerTensor` and `PerRow` granularity. |
+| float8 | bf16 | {class}`~torchao.quantization.Float8WeightOnlyConfig`: Applies float8 weight-only symmetric per-channel quantization. Matmul computed in original precision. |
+| int8 | int8 | {class}`~torchao.quantization.Int8DynamicActivationInt8WeightConfig`: Applies int8 dynamic symmetric per-token activation and int8 per-channel weight quantization. |
+| int8 | bf16 | {class}`~torchao.quantization.Int8WeightOnlyConfig`: Applies int8 weight-only symmetric per-channel quantization. |
+| mxfp8 | mxfp8 | {class}`~torchao.prototype.mx_formats.MXDynamicActivationMXWeightConfig`(prototype): Applies mxfp8 or mxfp4 dynamic quantization to activations and weights. Requires NVIDIA SM100+ (Blackwell) or AMD MI350+. |
+
+[3] pytorch__quantization_overview#012 | Quantization Overview > Quantization Algorithms/Flows > Dynamic Activation and Weight Quantization
+Dynamic Activation and Weight Quantization
+
+This is called "dynamic quantization" before but it means we quantize
+activation dynamically at runtime, and also quantize the weights as
+well. Compared to the weight only quantization, the main question is how
+do we apply the quantization to activation. In torchao we pass around
+the quantization keyword args for activation and the keyword args will
+be applied to activation when needed (e.g. in linear):
+
+activation_dtype = torch.float8_e4m3fn
+    activation_granularity = PerRow()
+    # define kwargs for float8 activation quantization
+    act_quant_kwargs = QuantizeTensorToFloat8Kwargs(
+      activation_dtype,
+      activation_granularity,
+    )
+    weight_dtype = torch.float8_e4m3fn
+    weight_granularity = PerRow()
+    quantized_weight = Float8Tensor.from_hp(linear_module.weight, float8_dtype=weight_dtype, granularity=weight_granularity, act_quant_kwargs=act_quant_kwargs)
+    linear_module.weight = torch.nn.Parameter(quantized_weight, requires_grad=False))
+
+Static Activation Quantization and Weight Quantization
+
+We'll skip the instruction for now since we haven't seen many use cases
+for static quantization with tensor subclass based flow, we recommend to
+look into the [PT2 export quantization
+flow](quick_start.html#pytorch-2-export-quantization) for static
+quantization.
+
+[4] pytorch__first_quantization_example#002 | First Quantization Example > W8A8-INT: 8-bit Dynamic Activation and Weight Quantization
+W8A8-INT: 8-bit Dynamic Activation and Weight Quantization
+
+Dynamic quantization quantizes both weights and activations at runtime.
+This provides better accuracy than weight-only while still offering
+speedup:
+
+``` py
+from torchao.quantization import Int8DynamicActivationInt8WeightConfig, quantize_
+
+quantize_(model_w8a8, Int8DynamicActivationInt8WeightConfig())
+```
+
+The model structure remains unchanged - only weight tensors are
+quantized. You can verify quantization by checking the weight tensor
+type:
+
+> \>\>\> print(type(model_w8a8.linear1.weight).\_\_name\_\_)
+> 'Int8Tensor'
+
+The quantized model is now ready to use! Note that the quantization
+logic is inserted through tensor subclasses, so there is no change to
+the overall model structure; only the weights tensors are updated.
+
+--- ANSWERS, condition R ---
+RA: In torchao's quantized inference, dynamic quantization and weight-only quantization differ in how they handle the activations and weights. With dynamic quantization, both activations and weights are dynamically quantized at runtime. This approach is beneficial for scenarios where both the activations and weights need to be quantized to achieve the best possible accuracy. On the other hand, weight-only quantization involves only the weights being quantized, which can provide a speedup but may result in less accurate activations. The provided pseudocode illustrates how to apply these configurations, showing how to configure the quantization for activations and weights in a linear module context.
+RB: In torchao's quantized inference, dynamic quantization quantizes both weights and activations at runtime, providing better accuracy compared to weight-only quantization. Weight-only quantization, on the other hand, only quantizes the weights and leaves the activations in their original precision. This means dynamic quantization offers a balance between accuracy and speed, while weight-only quantization prioritizes speed at the cost of potential accuracy loss.
+RC: In torchao's quantized inference, dynamic quantization quantizes both weights and activations at runtime, providing better accuracy compared to weight-only quantization. Weight-only quantization, on the other hand, quantizes only the weights and leaves the activations in their original precision. This means dynamic quantization offers a balance between accuracy and speed, while weight-only quantization prioritizes speed at the cost of potential accuracy loss.
+RD: In torchao's quantized inference, dynamic quantization quantizes both weights and activations at runtime, providing better accuracy compared to weight-only quantization. Weight-only quantization, on the other hand, quantizes only the weights and leaves the activations in their original precision.
+--- ORACLE CONTEXT (condition O) = ['pytorch__inference#000']; already shown above ---
+--- ANSWERS, condition O ---
+OA: Dynamic quantization involves converting the input and weight tensors to a lower precision format (like fp8 in the example) before performing the matrix multiplication. Weight-only quantization, on the other hand, only converts the weights to a lower precision format (like int4 in the example) while keeping the input tensor at a higher precision (like bf16).
+OB: Dynamic quantization and weight-only quantization in torchao's quantized inference differ in how they handle the weights. In dynamic quantization, the weights are converted to a lower precision format (like fp8 in the example), while in weight-only quantization, only the weights are quantized to a lower precision (like int4 in the example), leaving the inputs at their full precision.
+OC: In torchao's quantized inference, dynamic quantization involves converting the input and weight tensors to a quantized format (like fp8) before performing the matrix multiplication. Weight-only quantization, on the other hand, only converts the weight tensor to a quantized format (like int4) while keeping the input tensor in its original precision.
+OD: Dynamic quantization and weight-only quantization differ in how the weights and activations are handled during inference. In dynamic quantization, the weights and activations are converted to a specified precision (e.g., FP8 rowwise) before the matrix operations, allowing for more efficient computation at the cost of some precision. In contrast, weight-only quantization directly modifies the weights and activations for inference, which can be more memory-efficient but may require a more complex computation for the activations. The provided pseudocode illustrates these differences in the context of a matrix operation in a neural network.
+
+##### Q35 [unanswerable]
+QUESTION: How do I run a GGUF Q4_K_M model with llama.cpp?
+GOLD: Not stated in the documents.
+
+--- RETRIEVED CONTEXT (what the model saw in condition R) ---
+[1] pytorch__serving#011 | (Part 3) Serving on vLLM, SGLang, ExecuTorch > Post-training Quantization with HuggingFace > Serving and Inference with SGLang
+The .pte file can be run with ExecuTorch on a mobile phone. Follow the
+[instructions](https://docs.pytorch.org/executorch/main/llm/llama-demo-ios.html)
+for doing this on an iOS device.
+
+Mobile Performance Characteristics ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The torchao-optimized 8da4w model provides:
+
+- **Memory**: ~3.2GB on iPhone 15 Pro
+- **Speed**: ~17 tokens/sec on iPhone 15 Pro
+- **Accuracy**: Maintained within 5-10% of original model on most
+  benchmarks
+
+> [!NOTE]
+> For detailed instructions on testing the ExecuTorch model and
+> reproducing benchmarks please refer to the [HF
+> Phi-4-mini-instruct-8da4w
+> model](https://huggingface.co/pytorch/Phi-4-mini-instruct-8da4w).
+
+Evaluation ---------
+
+Model Quality Assessment ^^^^^^^^^^^^^^^^^^^^^^
+
+Evaluate quantized models using lm-evaluation-harness:
+
+[2] pytorch__serving#010 | (Part 3) Serving on vLLM, SGLang, ExecuTorch > Post-training Quantization with HuggingFace > Serving and Inference with SGLang
+Step 2: Export to ExecuTorch ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Convert the quantized model to .pte file, which can be run on mobile
+device.
+
+``` bash
+# Install ExecuTorch
+git clone https://github.com/pytorch/executorch.git
+cd executorch
+./install_requirements.sh
+
+# Convert checkpoint format for ExecuTorch
+python -m executorch.examples.models.phi_4_mini.convert_weights pytorch_model.bin pytorch_model_converted.bin
+
+# Export to PTE format with torchao optimizations preserved
+PARAMS="executorch/examples/models/phi_4_mini/config.json"
+python -m executorch.examples.models.llama.export_llama \
+    --model "phi_4_mini" \
+    --checkpoint "pytorch_model_converted.bin" \
+    --params "$PARAMS" \
+    -kv \
+    --use_sdpa_with_kv_cache \
+    -X \
+    --metadata '{"get_bos_id":199999, "get_eos_ids":[200020,199999]}' \
+    --max_seq_length 128 \
+    --max_context_length 128 \
+    --output_name="phi4-mini-8da4w.pte"
+```
+
+[3] pytorch__serving#012 | (Part 3) Serving on vLLM, SGLang, ExecuTorch > Post-training Quantization with HuggingFace > Serving and Inference with SGLang
+Evaluation ---------
+
+Model Quality Assessment ^^^^^^^^^^^^^^^^^^^^^^
+
+Evaluate quantized models using lm-evaluation-harness:
+
+``` bash
+# Install evaluation framework
+# Need to install lm-eval from source: https://github.com/EleutherAI/lm-evaluation-harness#install
+
+# Evaluate baseline model
+lm_eval --model hf --model_args pretrained=microsoft/Phi-4-mini-instruct --tasks hellaswag --device cuda:0 --batch_size 8
+
+# Evaluate torchao-quantized model (FP8)
+lm_eval --model hf --model_args pretrained=pytorch/Phi-4-mini-instruct-FP8 --tasks hellaswag --device cuda:0 --batch_size 8
+```
+
+Memory Benchmarking ^^^^^^^^^^^^^^^^^ For Phi-4-mini-instruct, when
+quantized with float8 dynamic quant, we can reduce the peak memory usage
+by 36% compared to the baseline model.
+
+[4] pytorch__serving#009 | (Part 3) Serving on vLLM, SGLang, ExecuTorch > Post-training Quantization with HuggingFace > Serving and Inference with SGLang
+quant_config = FqnToConfig({"_default": linear_config, "model.embed_tokens": embedding_config})
+quantization_config = TorchAoConfig(quant_type=quant_config, include_embedding=True, untie_embedding_weights=True, modules_to_not_convert=[])
+
+# either use `untied_model_id` or `untied_model_local_path`
+quantized_model = AutoModelForCausalLM.from_pretrained(untied_model_id, dtype=torch.float32, device_map="auto", quantization_config=quantization_config)
+tokenizer = AutoTokenizer.from_pretrained(model_id)
+
+# Push to hub
+MODEL_NAME = model_id.split("/")[-1]
+save_to = f"{USER_ID}/{MODEL_NAME}-8da4w"
+quantized_model.push_to_hub(save_to, safe_serialization=False)
+tokenizer.push_to_hub(save_to)
+```
+
+Step 2: Export to ExecuTorch ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Convert the quantized model to .pte file, which can be run on mobile
+device.
+
+--- ANSWERS, condition R ---
+RA: I cannot find this in the provided documents.
+RB: To run a GGUF Q4_K_M model with `llama.cpp` on a mobile device, you would need to follow the instructions provided for iOS devices. According to the context, this can be done using the `.pte` file generated from the model. The instructions for iOS devices are detailed in the provided link. Therefore, you would need to follow the iOS device instructions to run the model.
+RC: I cannot find this in the provided documents.
+RD: I cannot find this in the provided documents.

@@ -1,0 +1,610 @@
+##### Q11 [compare]
+QUESTION: What is the difference between the QOperator and QDQ formats for quantized ONNX models?
+GOLD: QOperator uses dedicated quantized operators such as QLinearConv and MatMulInteger. QDQ inserts DeQuantizeLinear(QuantizeLinear(tensor)) between the original operators to simulate quantization and dequantization.
+
+--- RETRIEVED CONTEXT (what the model saw in condition R) ---
+[1] ort__quantization#001 | Quantize ONNX models > ONNX quantization representation format
+ONNX quantization representation format
+
+There are two ways to represent quantized ONNX models:
+- Operator-oriented (QOperator) :  
+  All the quantized operators have their own ONNX definitions, like QLinearConv, MatMulInteger and etc.
+- Tensor-oriented (QDQ; Quantize and DeQuantize) :  
+  This format inserts DeQuantizeLinear(QuantizeLinear(tensor)) between the original operators to simulate the quantization and dequantization process.  
+  In Static Quantization, the QuantizeLinear and DeQuantizeLinear operators also carry the quantization parameters.  
+  In Dynamic Quantization, a ComputeQuantizationParameters function proto is inserted to calculate quantization parameters on the fly.
+- Models generated in the following ways are in the QDQ format:
+    1. Models quantized by quantize_static, explained below, with `quant_format=QuantFormat.QDQ`.
+    2. Quantization-Aware training (QAT) models converted from Tensorflow or exported from PyTorch.
+    3. Quantized models converted from TFLite and other frameworks.
+
+For the latter two cases, you don't need to quantize the model with the quantization tool. ONNX Runtime can run them directly as a quantized model.
+
+The picture below shows the equivalent representation with the QOperator and QDQ formats for quantized Conv. [This end-to-end example](https://github.com/microsoft/onnxruntime-inference-examples/tree/main/quantization/image_classification/cpu/run.py) demonstrates the two formats.
+
+[2] ort__quantization#002 | Quantize ONNX models > ONNX quantization representation format
+![Changes to nodes from basic and extended optimizations](../../../images/QDQ_Format.png)
+
+[3] ort__quantization#008 | Quantize ONNX models > Quantizing an ONNX model > <a name="qdqdebug"></a>Quantization Debugging
+In summary, ONNX Runtimes provides Python APIs for matching up corresponding weights and activation
+tensors between a float32 model and its quantized counterpart. This allows the user to easily
+compare them to locate where are the biggest differences.
+
+Model optimization during quantization creates difficulties for this debugging process though,
+since it may changes the computation graph in a significant way, resulting in a quantized model
+that is drastically different from the original. This makes it hard to match up corresponding
+tensors from the two models. As a result, we recommend performing model optimization during
+pre-processing instead of the quantization process.
+
+[4] ort__QNN-ExecutionProvider#013 | QNN Execution Provider > Running a model with QNN EP's HTP backend (Python) > Generating a quantized model (x64 only)
+Generating a quantized model (x64 only)
+
+The ONNX Runtime python package provides utilities for quantizing ONNX models via the `onnxruntime.quantization` import. The quantization utilities are currently only supported on x86_64 due to issues installing the `onnx` package on ARM64.
+Therefore, it is recommended to either use an x64 machine to quantize models or, alternatively, use a separate x64 python installation on Windows ARM64 machines.
+
+Install the ONNX Runtime x64 python package. (please note, you must use x64 package for quantizing the model. use the arm64 package for inferencing and utilizing the HTP/NPU)
+```shell
+python -m pip install onnxruntime-qnn
+```
+
+Quantization for QNN EP requires the use of calibration input data. Using a calibration dataset that is representative of typical model inputs is crucial in generating an accurate quantized model.
+
+The following snippet defines a sample `DataReader` class that generates random float32 input data. Note that using random input data will most likely produce an inaccurate quantized model.
+Refer to the [implementation of a Resnet data reader](https://github.com/microsoft/onnxruntime-inference-examples/blob/main/quantization/image_classification/cpu/resnet50_data_reader.py) for one example of how to create a `CalibrationDataReader` that provides input from image files on disk.
+
+--- ANSWERS, condition R ---
+RA: The QOperator format represents quantized ONNX models by giving each quantized operator its own ONNX definition, such as QLinearConv and MatMulInteger. In contrast, the QDQ (Quantize and DeQuantize) format inserts DeQuantizeLinear(QuantizeLinear(tensor)) between original operators to simulate the quantization and dequantization process, which is used in both static and dynamic quantization methods.
+RB: The QOperator format represents quantized operators with their own ONNX definitions, such as QLinearConv, MatMulInteger, etc. In contrast, the QDQ format inserts DeQuantizeLinear(QuantizeLinear(tensor)) between the original operators to simulate the quantization and dequantization process. This format is used in static quantization where QuantizeLinear and DeQuantizeLinear operators carry quantization parameters, and in dynamic quantization where a ComputeQuantizationParameters function proto is inserted to calculate quantization parameters on the fly.
+--- ORACLE CONTEXT (condition O) = ['ort__quantization#001']; already shown above ---
+--- ANSWERS, condition O ---
+OA: The QOperator format represents quantized ONNX models by giving each quantized operator its own ONNX definition, such as QLinearConv and MatMulInteger. In contrast, the QDQ (Quantize and DeQuantize) format inserts DeQuantizeLinear(QuantizeLinear(tensor)) operators between the original operators to simulate the quantization and dequantization process, which is used in both static and dynamic quantization methods.
+OB: The QOperator format represents quantized ONNX models where each quantized operator has its own ONNX definition, such as QLinearConv, MatMulInteger, etc. In contrast, the QDQ format inserts DeQuantizeLinear(QuantizeLinear(tensor)) between the original operators to simulate the quantization and dequantization process. In static quantization, the QuantizeLinear and DeQuantizeLinear operators carry quantization parameters, while in dynamic quantization, a ComputeQuantizationParameters function proto is used to calculate these parameters on the fly.
+
+##### Q12 [compare]
+QUESTION: How do TFLite dynamic range, full integer and float16 quantization compare in size reduction and hardware?
+GOLD: Dynamic range: 4x smaller, 2x-3x speedup, CPU. Full integer: 4x smaller, 3x+ speedup, CPU, Edge TPU and microcontrollers. Float16: 2x smaller with GPU acceleration, CPU and GPU.
+
+--- RETRIEVED CONTEXT (what the model saw in condition R) ---
+[1] tflite__post_training_quantization#001 | Post-training quantization > Dynamic range quantization
+Dynamic range quantization
+
+Dynamic range quantization is a recommended starting point because it provides
+reduced memory usage and faster computation without you having to provide a
+representative dataset for calibration. This type of quantization, statically
+quantizes only the weights from floating point to integer at conversion time,
+which provides 8-bits of precision:
+
+<pre>
+import tensorflow as tf
+converter = tf.lite.TFLiteConverter.from_saved_model(saved_model_dir)
+<b>converter.optimizations = [tf.lite.Optimize.DEFAULT]</b>
+tflite_quant_model = converter.convert()
+</pre>
+
+To further reduce latency during inference, "dynamic-range" operators
+dynamically quantize activations based on their range to 8-bits and perform
+computations with 8-bit weights and activations. This optimization provides
+latencies close to fully fixed-point inferences. However, the outputs are still
+stored using floating point so the increased speed of dynamic-range ops is less
+than a full fixed-point computation.
+
+[2] tflite__post_training_quantization#006 | Post-training quantization > Float16 quantization
+Float16 quantization
+
+You can reduce the size of a floating point model by quantizing the weights to
+float16, the IEEE standard for 16-bit floating point numbers. To enable float16
+quantization of weights, use the following steps:
+
+<pre>
+import tensorflow as tf
+converter = tf.lite.TFLiteConverter.from_saved_model(saved_model_dir)
+<b>converter.optimizations = [tf.lite.Optimize.DEFAULT]
+converter.target_spec.supported_types = [tf.float16]</b>
+tflite_quant_model = converter.convert()
+</pre>
+
+The advantages of float16 quantization are as follows:
+
+*   It reduces model size by up to half (since all weights become half of their
+    original size).
+*   It causes minimal loss in accuracy.
+*   It supports some delegates (e.g. the GPU delegate) which can operate
+    directly on float16 data, resulting in faster execution than float32
+    computations.
+
+The disadvantages of float16 quantization are as follows:
+
+*   It does not reduce latency as much as a quantization to fixed point math.
+*   By default, a float16 quantized model will "dequantize" the weights values
+    to float32 when run on the CPU. (Note that the GPU delegate will not perform
+    this dequantization, since it can operate on float16 data.)
+
+[3] tflite__post_training_quant#002 | Post-training dynamic range quantization > Overview
+Overview
+
+[TensorFlow Lite](https://www.tensorflow.org/lite/) now supports
+converting weights to 8-bit precision as part of model conversion from
+tensorflow graphdefs to TensorFlow Lite's flat buffer format. Dynamic range quantization achieves a 4x reduction in the model size. In addition, TFLite supports on-the-fly quantization and dequantization of activations to allow for:
+
+1.  Using quantized kernels for faster implementation when available.
+2.  Mixing of floating-point kernels with quantized kernels for different parts
+    of the graph.
+
+The activations are always stored in floating point. For ops that
+support quantized kernels, the activations are quantized to 8 bits of precision
+dynamically prior to processing and are de-quantized to float precision after
+processing. Depending on the model being converted, this can give a speedup over
+pure floating point computation.
+
+In contrast to
+[quantization aware training](https://github.com/tensorflow/tensorflow/tree/r1.14/tensorflow/contrib/quantize)
+, the weights are quantized post training and the activations are quantized dynamically 
+at inference in this method.
+Therefore, the model weights are not retrained to compensate for quantization
+induced errors. It is important to check the accuracy of the quantized model to
+ensure that the degradation is acceptable.
+
+This tutorial trains an MNIST model from scratch, checks its accuracy in
+TensorFlow, and then converts the model into a Tensorflow Lite flatbuffer
+with dynamic range quantization. Finally, it checks the
+accuracy of the converted model and compares it to the original float model.
+
+[4] tflite__post_training_quant#008 | Post-training dynamic range quantization > Optimizing an existing model
+```python
+!ls -lh {tflite_models_dir}/*.tflite
+```
+
+The model size was reduced from 171 MB to 43 MB.
+The accuracy of this model on imagenet can be evaluated using the scripts provided for [TFLite accuracy measurement](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/lite/tools/evaluation/tasks/imagenet_image_classification).
+
+The optimized model top-1 accuracy is 76.8, the same as the floating point model.
+
+--- ANSWERS, condition R ---
+RA: TFLite dynamic range quantization provides a 4x reduction in model size compared to the original floating point model. This method uses 8-bit precision for weights and activations, which can lead to faster inference times. However, the outputs are still stored in floating point, limiting the speedup compared to a full fixed-point computation.
+
+Float16 quantization reduces the model size by up to half, as all weights become half of their original size. It causes minimal loss in accuracy and supports some delegates that can operate directly on float16 data, leading to faster execution than float32 computations. However, it does not reduce latency as much as a quantization to fixed point math and requires dequantization on the CPU.
+
+Full integer quantization would further reduce the model size by using integer values for weights and activations, potentially leading to even greater speedups but at the cost of accuracy. This method would not be covered in the provided context.
+RB: Dynamic range quantization reduces the model size by a factor of 4 compared to full floating-point models, storing weights in 8-bit precision and keeping activations in floating point. Float16 quantization reduces the model size by up to half, as weights are stored in 16-bit precision. However, dynamic range quantization provides faster inference than full integer quantization, which requires retraining the model to handle quantization errors. Float16 quantization supports some hardware accelerations like the GPU delegate, which can operate directly on float16 data, potentially offering faster execution than float32 computations.
+--- ORACLE CONTEXT (condition O) = ['tflite__post_training_quantization#000']; extra chunks below ---
+tflite__post_training_quantization#000 | Post-training quantization
+Post-training quantization
+
+Post-training quantization is a conversion technique that can reduce model size
+while also improving CPU and hardware accelerator latency, with little
+degradation in model accuracy. You can quantize an already-trained float
+TensorFlow model when you convert it to TensorFlow Lite format using the
+[TensorFlow Lite Converter](../models/convert/).
+
+Note: The procedures on this page require TensorFlow 1.15 or higher.
+
+Optimization Methods
+
+There are several post-training quantization options to choose from. Here is a
+summary table of the choices and the benefits they provide:
+
+| Technique            | Benefits                  | Hardware         |
+| -------------------- | ------------------------- | ---------------- |
+| Dynamic range        | 4x smaller, 2x-3x speedup | CPU              |
+: quantization         :                           :                  :
+| Full integer         | 4x smaller, 3x+ speedup   | CPU, Edge TPU,   |
+: quantization         :                           : Microcontrollers :
+| Float16 quantization | 2x smaller, GPU           | CPU, GPU         |
+:                      : acceleration              :                  :
+
+The following decision tree can help determine which post-training quantization
+method is best for your use case:
+
+![post-training optimization options](images/optimization.jpg)
+
+--- ANSWERS, condition O ---
+OA: Dynamic range quantization results in a model that is 4x smaller and offers a 2x-3x speedup, primarily benefiting CPU hardware. Full integer quantization provides a similarly sized model (4x smaller) but with a 3x or more speedup, supporting a wider range of hardware including CPU, Edge TPU, and microcontrollers. Float16 quantization reduces the model size by 2x and is particularly beneficial for hardware with GPU acceleration, such as CPU and GPU.
+OB: TFLite dynamic range quantization provides a 4x smaller model size compared to the original float model. It offers a 2x-3x speedup on CPU. Full integer quantization also results in a 4x smaller model but provides a 3x+ speedup across CPU and Edge TPU. Float16 quantization leads to a 2x smaller model size and accelerates GPU performance.
+
+##### Q13 [compare]
+QUESTION: How does float16 conversion in TFLite compare with float16 conversion in ONNX Runtime?
+GOLD: Both can shrink the model by up to half with small accuracy loss and benefit GPUs. TFLite float16 quantizes weights and dequantizes them to float32 on CPU by default, while the GPU delegate runs float16 directly. ONNX Runtime converts the model with a float16 tool, needs no tuning data, may need op block lists or mixed precision, and the CPU version does not support float16 ops.
+
+--- RETRIEVED CONTEXT (what the model saw in condition R) ---
+[1] ort__float16#000 | Float16 and mixed precision models
+Float16 and mixed precision models
+
+Converting a model to use float16 instead of float32 can decrease the model size (up to half) and improve performance on some GPUs. There may be some accuracy loss, but in many models the new accuracy is acceptable. Tuning data is not needed for float16 conversion, which can make it preferable to quantization.
+
+Float16 Conversion
+
+Convert a model to float16 by following these steps:
+
+1. Install onnx and [onnxconverter-common](https://github.com/microsoft/onnxconverter-common)
+
+`pip install onnx onnxconverter-common`
+
+2. Use the `convert_float_to_float16` function in python.
+    ```python
+    import onnx
+    from onnxconverter_common import float16
+
+    model = onnx.load("path/to/model.onnx")
+    model_fp16 = float16.convert_float_to_float16(model)
+    onnx.save(model_fp16, "path/to/model_fp16.onnx")
+    ```
+
+[2] ort__float16#002 | Float16 and mixed precision models > Mixed Precision
+Mixed Precision
+
+If float16 conversion is giving poor results, you can convert most of the ops to float16 but leave some in float32. The `auto_mixed_precision.auto_convert_mixed_precision` tool finds a minimal set of ops to skip while retaining a certain level of accuracy. You will need to provide a sample input for the model.
+
+Since the CPU version of ONNX Runtime doesn't support float16 ops and the tool needs to measure the accuracy loss, **the mixed precision tool must be run on a device with a GPU**.
+
+```python
+from onnxconverter_common import auto_mixed_precision
+import onnx
+
+model = onnx.load("path/to/model.onnx")
+# Assuming x is the input to the model
+feed_dict = {'input': x.numpy()}
+model_fp16 = auto_convert_mixed_precision(model, feed_dict, rtol=0.01, atol=0.001, keep_io_types=True)
+onnx.save(model_fp16, "path/to/model_fp16.onnx")
+```
+
+[3] ort__float16#001 | Float16 and mixed precision models > Float16 Conversion > Float16 Tool Arguments
+Float16 Tool Arguments
+
+If the converted model does not work or has poor accuracy, you may need to set additional arguments.
+
+```python
+convert_float_to_float16(model, min_positive_val=1e-7, max_finite_val=1e4, keep_io_types=False,
+                         disable_shape_infer=False, op_block_list=None, node_block_list=None)
+```
+
+- `model`: The ONNX model to convert.
+- `min_positive_val`, `max_finite_val`: Constant values will be clipped to these bounds. `0.0`, `nan`, `inf`, and `-inf` will be unchanged.
+- `keep_io_types`: Whether model inputs/outputs should be left as float32.
+- `disable_shape_infer`: Skips running onnx shape/type inference. Useful if shape inference is crashing, shapes/types are already present in the model, or types are not needed (types are used to determine where cast ops are needed for unsupported/blocked ops).
+- `op_block_list`: List of op types to leave as float32. By default uses the list from `float16.DEFAULT_OP_BLOCK_LIST`. This list has ops that are not supported for float16 in ONNX Runtime.
+- `node_block_list`: List of node names to leave as float32.
+
+**NOTE**: Blocked ops will have have casts inserted around them to/from float16/float32. Currently, if two blocked ops are next to each other, the casts will still be inserted, creating a redundant pair. ORT will optimize this pair out at runtime, so the results will remain at full-precision.
+
+[4] tflite__post_training_float16_quant#005 | Post-training float16 quantization > Build an MNIST model > Convert to a TensorFlow Lite model
+Finally, convert the model like usual. Note, by default the converted model will still use float input and outputs for invocation convenience.
+
+```python
+tflite_fp16_model = converter.convert()
+tflite_model_fp16_file = tflite_models_dir/"mnist_model_quant_f16.tflite"
+tflite_model_fp16_file.write_bytes(tflite_fp16_model)
+```
+
+Note how the resulting file is approximately `1/2` the size.
+
+```python
+!ls -lh {tflite_models_dir}
+```
+
+--- ANSWERS, condition R ---
+RA: Float16 conversion in TFLite and ONNX Runtime both aim to reduce model size and improve performance by using half-precision floating-point numbers. However, the specific tools and methods differ between the two frameworks. In ONNX Runtime, the `convert_float_to_float16` function is used for conversion, while in TFLite, the process is part of the quantization pipeline, though it can be manually controlled. I cannot find this in the provided documents.
+RB: Float16 conversion in TensorFlow Lite (TFLite) and ONNX Runtime (ORT) can be similar in that both aim to convert models to use float16 instead of float32 to reduce model size and improve performance. However, the specifics can differ. For example, ORT provides tools like `convert_float_to_float16` and `auto_convert_mixed_precision` to facilitate the conversion process, whereas TFLite has its own conversion process that might not offer the same level of customization or tools. Additionally, the resulting TFLite model is typically smaller due to the reduced precision, but the exact size reduction can vary depending on the model and the specific conversion process used.
+--- ORACLE CONTEXT (condition O) = ['tflite__post_training_quantization#006', 'ort__float16#000']; extra chunks below ---
+tflite__post_training_quantization#006 | Post-training quantization > Float16 quantization
+Float16 quantization
+
+You can reduce the size of a floating point model by quantizing the weights to
+float16, the IEEE standard for 16-bit floating point numbers. To enable float16
+quantization of weights, use the following steps:
+
+<pre>
+import tensorflow as tf
+converter = tf.lite.TFLiteConverter.from_saved_model(saved_model_dir)
+<b>converter.optimizations = [tf.lite.Optimize.DEFAULT]
+converter.target_spec.supported_types = [tf.float16]</b>
+tflite_quant_model = converter.convert()
+</pre>
+
+The advantages of float16 quantization are as follows:
+
+*   It reduces model size by up to half (since all weights become half of their
+    original size).
+*   It causes minimal loss in accuracy.
+*   It supports some delegates (e.g. the GPU delegate) which can operate
+    directly on float16 data, resulting in faster execution than float32
+    computations.
+
+The disadvantages of float16 quantization are as follows:
+
+*   It does not reduce latency as much as a quantization to fixed point math.
+*   By default, a float16 quantized model will "dequantize" the weights values
+    to float32 when run on the CPU. (Note that the GPU delegate will not perform
+    this dequantization, since it can operate on float16 data.)
+
+--- ANSWERS, condition O ---
+OA: I cannot find this in the provided documents.
+OB: I cannot find this in the provided documents.
+
+##### Q14 [compare]
+QUESTION: What are the trade-offs of TFLite 16x8 quantization compared with int8 full integer quantization?
+GOLD: 16x8 (int16 activations, int8 weights) can improve accuracy while keeping a similar model size, but inference is noticeably slower because kernels are not optimized, and it is incompatible with existing hardware accelerated delegates.
+
+--- RETRIEVED CONTEXT (what the model saw in condition R) ---
+[1] tflite__model_optimization#007 | Model optimization > Types of optimization > Full integer quantization with int16 activations and int8 weights
+Full integer quantization with int16 activations and int8 weights
+
+[Quantization with int16 activations](https://www.tensorflow.org/model_optimization/guide/quantization/post_training)
+is a full integer quantization scheme with activations in int16 and weights in
+int8. This mode can improve accuracy of the quantized model in comparison to the
+full integer quantization scheme with both activations and weights in int8
+keeping a similar model size. It is recommended when activations are sensitive
+to the quantization.
+
+<i>NOTE:</i> Currently only non-optimized reference kernel implementations are
+available in TFLite for this quantization scheme, so by default the performance
+will be slow compared to int8 kernels. Full advantages of this mode can
+currently be accessed via specialised hardware, or custom software.
+
+[2] tflite__quantization_spec#006 | TensorFlow Lite 8-bit quantization specification > int8 quantized operator specifications
+int8 quantized operator specifications
+
+Below we describe the quantization requirements for our int8 tflite kernels:
+
+```
+ADD
+  Input 0:
+    data_type  : int8
+    range      : [-128, 127]
+    granularity: per-tensor
+  Input 1:
+    data_type  : int8
+    range      : [-128, 127]
+    granularity: per-tensor
+  Output 0:
+    data_type  : int8
+    range      : [-128, 127]
+    granularity: per-tensor
+
+AVERAGE_POOL_2D
+  Input 0:
+    data_type  : int8
+    range      : [-128, 127]
+    granularity: per-tensor
+  Output 0:
+    data_type  : int8
+    range      : [-128, 127]
+    granularity: per-tensor
+  restriction: Input and outputs must all have same scale/zero_point
+
+CONCATENATION
+  Input ...:
+    data_type  : int8
+    range      : [-128, 127]
+    granularity: per-tensor
+  Output 0:
+    data_type  : int8
+    range      : [-128, 127]
+    granularity: per-tensor
+  restriction: Input and outputs must all have same scale/zero_point
+
+CONV_2D
+  Input 0:
+    data_type  : int8
+    range      : [-128, 127]
+    granularity: per-tensor
+  Input 1 (Weight):
+    data_type  : int8
+    range      : [-127, 127]
+    granularity: per-axis (dim = 0)
+
+[3] tflite__post_training_quantization#007 | Post-training quantization > Integer only: 16-bit activations with 8-bit weights (experimental)
+Integer only: 16-bit activations with 8-bit weights (experimental)
+
+This is an experimental quantization scheme. It is similar to the "integer only"
+scheme, but activations are quantized based on their range to 16-bits, weights
+are quantized in 8-bit integer and bias is quantized into 64-bit integer. This
+is referred to as 16x8 quantization further.
+
+The main advantage of this quantization is that it can improve accuracy
+significantly, but only slightly increase model size.
+
+<pre>
+import tensorflow as tf
+converter = tf.lite.TFLiteConverter.from_saved_model(saved_model_dir)
+converter.representative_dataset = representative_dataset
+<b>converter.optimizations = [tf.lite.Optimize.DEFAULT]
+converter.target_spec.supported_ops = [tf.lite.OpsSet.EXPERIMENTAL_TFLITE_BUILTINS_ACTIVATIONS_INT16_WEIGHTS_INT8]</b>
+tflite_quant_model = converter.convert()
+</pre>
+
+[4] tflite__post_training_quantization#008 | Post-training quantization > Integer only: 16-bit activations with 8-bit weights (experimental)
+If 16x8 quantization is not supported for some operators in the model,
+then the model still can be quantized, but unsupported operators kept in float.
+The following option should be added to the target_spec to allow this.
+<pre>
+import tensorflow as tf
+converter = tf.lite.TFLiteConverter.from_saved_model(saved_model_dir)
+converter.representative_dataset = representative_dataset
+converter.optimizations = [tf.lite.Optimize.DEFAULT]
+converter.target_spec.supported_ops = [tf.lite.OpsSet.EXPERIMENTAL_TFLITE_BUILTINS_ACTIVATIONS_INT16_WEIGHTS_INT8,
+<b>tf.lite.OpsSet.TFLITE_BUILTINS</b>]
+tflite_quant_model = converter.convert()
+</pre>
+
+Examples of the use cases where accuracy improvements provided by this
+quantization scheme include:
+
+*   super-resolution,
+*   audio signal processing such as noise cancelling and beamforming,
+*   image de-noising,
+*   HDR reconstruction from a single image.
+
+The disadvantage of this quantization is:
+
+*   Currently inference is noticeably slower than 8-bit full integer due to the
+    lack of optimized kernel implementation.
+*   Currently it is incompatible with the existing hardware accelerated TFLite
+    delegates.
+
+Note: This is an experimental feature.
+
+A tutorial for this quantization mode can be found
+[here](post_training_integer_quant_16x8.ipynb).
+
+--- ANSWERS, condition R ---
+RA: The trade-offs of TFLite 16x8 quantization compared with int8 full integer quantization are:
+
+- **Accuracy**: 16x8 quantization can improve accuracy significantly, while int8 full integer quantization slightly increases model size but does not necessarily improve accuracy as much.
+- **Model Size**: 16x8 quantization slightly increases model size compared to int8 full integer quantization.
+- **Performance**: 16x8 quantization is currently slower during inference due to the lack of optimized kernel implementations, whereas int8 full integer quantization is faster.
+- **Hardware Compatibility**: 16x8 quantization is currently incompatible with existing hardware accelerated TFLite delegates, unlike int8 full integer quantization.
+RB: The trade-offs of TFLite 16x8 quantization compared with int8 full integer quantization include improved accuracy with a slight increase in model size, but at the cost of slower inference speed due to the lack of optimized kernel implementations. Additionally, it is currently incompatible with existing hardware-accelerated TFLite delegates.
+--- ORACLE CONTEXT (condition O) = ['tflite__model_optimization#007', 'tflite__post_training_quantization#008']; already shown above ---
+--- ANSWERS, condition O ---
+OA: The trade-offs of TFLite 16x8 quantization compared with int8 full integer quantization are:
+
+- Inference speed: 16x8 quantization is noticeably slower than 8-bit full integer quantization due to the lack of optimized kernel implementation.
+- Hardware compatibility: It is currently incompatible with existing hardware accelerated TFLite delegates.
+OB: The trade-offs of TFLite 16x8 quantization compared with int8 full integer quantization include improved accuracy for sensitive activations at the cost of slower inference performance due to the lack of optimized kernel implementations. Additionally, it is currently incompatible with existing hardware-accelerated TFLite delegates. While it offers better accuracy, the performance and hardware compatibility are less favorable compared to int8 full integer quantization.
+
+##### Q15 [number]
+QUESTION: What size reduction and speedup does the TFLite documentation give for dynamic range quantization?
+GOLD: 4x smaller with a 2x-3x speedup, on CPU.
+
+--- RETRIEVED CONTEXT (what the model saw in condition R) ---
+[1] tflite__post_training_quantization#001 | Post-training quantization > Dynamic range quantization
+Dynamic range quantization
+
+Dynamic range quantization is a recommended starting point because it provides
+reduced memory usage and faster computation without you having to provide a
+representative dataset for calibration. This type of quantization, statically
+quantizes only the weights from floating point to integer at conversion time,
+which provides 8-bits of precision:
+
+<pre>
+import tensorflow as tf
+converter = tf.lite.TFLiteConverter.from_saved_model(saved_model_dir)
+<b>converter.optimizations = [tf.lite.Optimize.DEFAULT]</b>
+tflite_quant_model = converter.convert()
+</pre>
+
+To further reduce latency during inference, "dynamic-range" operators
+dynamically quantize activations based on their range to 8-bits and perform
+computations with 8-bit weights and activations. This optimization provides
+latencies close to fully fixed-point inferences. However, the outputs are still
+stored using floating point so the increased speed of dynamic-range ops is less
+than a full fixed-point computation.
+
+[2] tflite__post_training_quant#002 | Post-training dynamic range quantization > Overview
+Overview
+
+[TensorFlow Lite](https://www.tensorflow.org/lite/) now supports
+converting weights to 8-bit precision as part of model conversion from
+tensorflow graphdefs to TensorFlow Lite's flat buffer format. Dynamic range quantization achieves a 4x reduction in the model size. In addition, TFLite supports on-the-fly quantization and dequantization of activations to allow for:
+
+1.  Using quantized kernels for faster implementation when available.
+2.  Mixing of floating-point kernels with quantized kernels for different parts
+    of the graph.
+
+The activations are always stored in floating point. For ops that
+support quantized kernels, the activations are quantized to 8 bits of precision
+dynamically prior to processing and are de-quantized to float precision after
+processing. Depending on the model being converted, this can give a speedup over
+pure floating point computation.
+
+In contrast to
+[quantization aware training](https://github.com/tensorflow/tensorflow/tree/r1.14/tensorflow/contrib/quantize)
+, the weights are quantized post training and the activations are quantized dynamically 
+at inference in this method.
+Therefore, the model weights are not retrained to compensate for quantization
+induced errors. It is important to check the accuracy of the quantized model to
+ensure that the degradation is acceptable.
+
+This tutorial trains an MNIST model from scratch, checks its accuracy in
+TensorFlow, and then converts the model into a Tensorflow Lite flatbuffer
+with dynamic range quantization. Finally, it checks the
+accuracy of the converted model and compares it to the original float model.
+
+[3] tflite__post_training_quant#008 | Post-training dynamic range quantization > Optimizing an existing model
+```python
+!ls -lh {tflite_models_dir}/*.tflite
+```
+
+The model size was reduced from 171 MB to 43 MB.
+The accuracy of this model on imagenet can be evaluated using the scripts provided for [TFLite accuracy measurement](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/lite/tools/evaluation/tasks/imagenet_image_classification).
+
+The optimized model top-1 accuracy is 76.8, the same as the floating point model.
+
+[4] tflite__post_training_quant#005 | Post-training dynamic range quantization > Run the TFLite models
+Run the TFLite models
+
+Run the TensorFlow Lite model using the Python TensorFlow Lite
+Interpreter.
+
+Load the model into an interpreter
+
+```python
+interpreter = tf.lite.Interpreter(model_path=str(tflite_model_file))
+interpreter.allocate_tensors()
+```
+
+```python
+interpreter_quant = tf.lite.Interpreter(model_path=str(tflite_model_quant_file))
+interpreter_quant.allocate_tensors()
+```
+
+Test the model on one image
+
+```python
+test_image = np.expand_dims(test_images[0], axis=0).astype(np.float32)
+
+input_index = interpreter.get_input_details()[0]["index"]
+output_index = interpreter.get_output_details()[0]["index"]
+
+interpreter.set_tensor(input_index, test_image)
+interpreter.invoke()
+predictions = interpreter.get_tensor(output_index)
+```
+
+```python
+import matplotlib.pylab as plt
+
+plt.imshow(test_images[0])
+template = "True:{true}, predicted:{predict}"
+_ = plt.title(template.format(true= str(test_labels[0]),
+                              predict=str(np.argmax(predictions[0]))))
+plt.grid(False)
+```
+
+--- ANSWERS, condition R ---
+RA: The TFLite documentation states that dynamic range quantization achieves a 4x reduction in model size. However, it does not provide specific information about the speedup compared to fully fixed-point computations. It mentions that the speedup is less than a full fixed-point computation, but does not quantify this difference.
+RB: The TFLite documentation indicates that dynamic range quantization achieves a 4x reduction in model size. Additionally, it can provide latencies close to fully fixed-point inferences, which can lead to speedups, though the exact speedup is not quantified in the provided context.
+--- ORACLE CONTEXT (condition O) = ['tflite__post_training_quantization#000']; extra chunks below ---
+tflite__post_training_quantization#000 | Post-training quantization
+Post-training quantization
+
+Post-training quantization is a conversion technique that can reduce model size
+while also improving CPU and hardware accelerator latency, with little
+degradation in model accuracy. You can quantize an already-trained float
+TensorFlow model when you convert it to TensorFlow Lite format using the
+[TensorFlow Lite Converter](../models/convert/).
+
+Note: The procedures on this page require TensorFlow 1.15 or higher.
+
+Optimization Methods
+
+There are several post-training quantization options to choose from. Here is a
+summary table of the choices and the benefits they provide:
+
+| Technique            | Benefits                  | Hardware         |
+| -------------------- | ------------------------- | ---------------- |
+| Dynamic range        | 4x smaller, 2x-3x speedup | CPU              |
+: quantization         :                           :                  :
+| Full integer         | 4x smaller, 3x+ speedup   | CPU, Edge TPU,   |
+: quantization         :                           : Microcontrollers :
+| Float16 quantization | 2x smaller, GPU           | CPU, GPU         |
+:                      : acceleration              :                  :
+
+The following decision tree can help determine which post-training quantization
+method is best for your use case:
+
+![post-training optimization options](images/optimization.jpg)
+
+--- ANSWERS, condition O ---
+OA: For dynamic range quantization, the TFLite documentation states a 4x smaller model size and a 2x-3x speedup.
+OB: The TFLite documentation gives a 4x smaller size reduction and a 2x-3x speedup for dynamic range quantization.

@@ -1,0 +1,584 @@
+##### Q26 [fact]
+QUESTION: Why does ONNX Runtime recommend running model optimization during pre-processing rather than during quantization?
+GOLD: Optimizing during quantization can change the graph significantly, which makes it hard to match tensors between the float and quantized models when debugging accuracy loss.
+
+--- RETRIEVED CONTEXT (what the model saw in condition R) ---
+[1] ort__quantization#005 | Quantize ONNX models > Quantizing an ONNX model > Pre-processing
+```console
+python -m onnxruntime.quantization.preprocess --help
+```
+
+Model optimization may also be performed during quantization. However, this is *NOT* recommended,
+even though it's the default behavior due to historical reasons. Model optimization during
+quantization creates difficulties for debugging quantization caused accuracy losses, which will
+be discussed in [later sections](#qdqdebug). So, it is best to perform model optimization during
+pre-processing instead of during quantization.
+
+[2] ort__quantization#004 | Quantize ONNX models > Quantizing an ONNX model > Pre-processing
+Pre-processing
+
+Pre-processing is to transform a float32 model to prepare it for quantization. It consists
+of the following three optional steps:
+
+1. Symbolic shape inference. This is best suited for transformer models.
+2. Model optimization: This step uses ONNX Runtime native library to rewrite the
+computation graph, including merging computation nodes, eliminating redundancies
+to improve runtime efficiency.
+3. ONNX shape inference.
+
+The goal of these steps is to improve quantization quality. Our quantization tool
+works best when the tensor's shape is known. Both symbolic shape inference and
+ONNX shape inference help figure out tensor shapes. Symbolic shape inference works
+best with transformer based models, and ONNX shape inference works with other
+models.
+
+Model optimization performs certain operator fusion that makes quantization tool's
+job easier. For instance, a Convolution operator followed by BatchNormalization
+can be fused into one during the optimization, which can be quantized very efficiently.
+
+Unfortunately, a known issue in ONNX Runtime is that model optimization can not output
+a model size greater than 2GB. So for large models, optimization must be skipped.
+
+Pre-processing API is in Python module `onnxruntime.quantization.shape_inference`,
+function `quant_pre_process()`. See
+[`shape_inference.py`](https://github.com/microsoft/onnxruntime/blob/main/onnxruntime/python/tools/quantization/shape_inference.py).
+To read about additional options and finer controls available to pre-processing,
+run the following command:
+
+```console
+python -m onnxruntime.quantization.preprocess --help
+```
+
+[3] ort__quantization#008 | Quantize ONNX models > Quantizing an ONNX model > <a name="qdqdebug"></a>Quantization Debugging
+In summary, ONNX Runtimes provides Python APIs for matching up corresponding weights and activation
+tensors between a float32 model and its quantized counterpart. This allows the user to easily
+compare them to locate where are the biggest differences.
+
+Model optimization during quantization creates difficulties for this debugging process though,
+since it may changes the computation graph in a significant way, resulting in a quantized model
+that is drastically different from the original. This makes it hard to match up corresponding
+tensors from the two models. As a result, we recommend performing model optimization during
+pre-processing instead of the quantization process.
+
+[4] ort__quantization#019 | Quantize ONNX models > FAQ > Why am I not seeing performance improvements?
+Why am I not seeing performance improvements?
+
+The performance improvement depends on your model and hardware. The performance gain from quantization has two aspects: compute and memory. Old hardware has none or few of the instructions needed to perform efficient inference in int8. And quantization has overhead (from quantizing and dequantizing), so it is not rare to get worse performance on old devices.
+
+x86-64 with VNNI, GPU with Tensor Core int8 support and Arm®-based processors with dot-product instructions can get better performance in general.
+
+Which quantization method should I choose, dynamic or static?
+
+Please refer to the [Method selection](#method-selection) section.
+
+When to use reduce-range and per-channel quantization?
+
+Reduce-range will quantize the weights to 7 bits. It is designed for the U8S8 format on AVX2 and AVX512 (non-VNNI) machines to mitigate [saturation issues](#data-type-selection). This is not needed on machines supporting VNNI.
+
+Per-channel quantization can improve the accuracy for models whose weight ranges are large. Try it if the accuracy loss is large. On AVX2 and AVX512 machines, you will generally need to enable reduce-range as well if per-channel is enabled.
+
+Why are operators like MaxPool not quantized?
+
+8-bit type support for certain operators such as MaxPool was added in ONNX opset 12. Please check your model version and upgrade it to opset 12 and above.
+
+--- ANSWERS, condition R ---
+RA: ONNX Runtime recommends running model optimization during pre-processing rather than during quantization because it creates difficulties for debugging quantization caused accuracy losses. This recommendation is made to avoid changes in the computation graph that can make it hard to match up corresponding tensors from the float32 model and its quantized counterpart.
+RB: ONNX Runtime recommends running model optimization during pre-processing rather than during quantization to avoid difficulties in debugging quantization-caused accuracy losses. Model optimization can significantly alter the computation graph, leading to a quantized model that differs greatly from the original, making it hard to match corresponding tensors for comparison.
+--- ORACLE CONTEXT (condition O) = ['ort__quantization#005']; already shown above ---
+--- ANSWERS, condition O ---
+OA: ONNX Runtime recommends running model optimization during pre-processing rather than during quantization to avoid difficulties in debugging accuracy losses caused by quantization. This is because optimizing the model during quantization can make it harder to isolate whether any observed accuracy issues are due to the quantization process itself or other factors introduced during optimization.
+OB: ONNX Runtime recommends running model optimization during pre-processing rather than during quantization because it complicates debugging efforts when quantization causes accuracy losses. This is due to historical reasons, but it is generally better to optimize the model before quantization to avoid these complications.
+
+##### Q27 [fact]
+QUESTION: What known limitation does ONNX Runtime have when optimizing large models during quantization pre-processing?
+GOLD: Model optimization cannot output a model larger than 2GB, so it must be skipped for large models.
+
+--- RETRIEVED CONTEXT (what the model saw in condition R) ---
+[1] ort__quantization#005 | Quantize ONNX models > Quantizing an ONNX model > Pre-processing
+```console
+python -m onnxruntime.quantization.preprocess --help
+```
+
+Model optimization may also be performed during quantization. However, this is *NOT* recommended,
+even though it's the default behavior due to historical reasons. Model optimization during
+quantization creates difficulties for debugging quantization caused accuracy losses, which will
+be discussed in [later sections](#qdqdebug). So, it is best to perform model optimization during
+pre-processing instead of during quantization.
+
+[2] ort__quantization#004 | Quantize ONNX models > Quantizing an ONNX model > Pre-processing
+Pre-processing
+
+Pre-processing is to transform a float32 model to prepare it for quantization. It consists
+of the following three optional steps:
+
+1. Symbolic shape inference. This is best suited for transformer models.
+2. Model optimization: This step uses ONNX Runtime native library to rewrite the
+computation graph, including merging computation nodes, eliminating redundancies
+to improve runtime efficiency.
+3. ONNX shape inference.
+
+The goal of these steps is to improve quantization quality. Our quantization tool
+works best when the tensor's shape is known. Both symbolic shape inference and
+ONNX shape inference help figure out tensor shapes. Symbolic shape inference works
+best with transformer based models, and ONNX shape inference works with other
+models.
+
+Model optimization performs certain operator fusion that makes quantization tool's
+job easier. For instance, a Convolution operator followed by BatchNormalization
+can be fused into one during the optimization, which can be quantized very efficiently.
+
+Unfortunately, a known issue in ONNX Runtime is that model optimization can not output
+a model size greater than 2GB. So for large models, optimization must be skipped.
+
+Pre-processing API is in Python module `onnxruntime.quantization.shape_inference`,
+function `quant_pre_process()`. See
+[`shape_inference.py`](https://github.com/microsoft/onnxruntime/blob/main/onnxruntime/python/tools/quantization/shape_inference.py).
+To read about additional options and finer controls available to pre-processing,
+run the following command:
+
+```console
+python -m onnxruntime.quantization.preprocess --help
+```
+
+[3] ort__quantization#008 | Quantize ONNX models > Quantizing an ONNX model > <a name="qdqdebug"></a>Quantization Debugging
+In summary, ONNX Runtimes provides Python APIs for matching up corresponding weights and activation
+tensors between a float32 model and its quantized counterpart. This allows the user to easily
+compare them to locate where are the biggest differences.
+
+Model optimization during quantization creates difficulties for this debugging process though,
+since it may changes the computation graph in a significant way, resulting in a quantized model
+that is drastically different from the original. This makes it hard to match up corresponding
+tensors from the two models. As a result, we recommend performing model optimization during
+pre-processing instead of the quantization process.
+
+[4] ort__quantization#019 | Quantize ONNX models > FAQ > Why am I not seeing performance improvements?
+Why am I not seeing performance improvements?
+
+The performance improvement depends on your model and hardware. The performance gain from quantization has two aspects: compute and memory. Old hardware has none or few of the instructions needed to perform efficient inference in int8. And quantization has overhead (from quantizing and dequantizing), so it is not rare to get worse performance on old devices.
+
+x86-64 with VNNI, GPU with Tensor Core int8 support and Arm®-based processors with dot-product instructions can get better performance in general.
+
+Which quantization method should I choose, dynamic or static?
+
+Please refer to the [Method selection](#method-selection) section.
+
+When to use reduce-range and per-channel quantization?
+
+Reduce-range will quantize the weights to 7 bits. It is designed for the U8S8 format on AVX2 and AVX512 (non-VNNI) machines to mitigate [saturation issues](#data-type-selection). This is not needed on machines supporting VNNI.
+
+Per-channel quantization can improve the accuracy for models whose weight ranges are large. Try it if the accuracy loss is large. On AVX2 and AVX512 machines, you will generally need to enable reduce-range as well if per-channel is enabled.
+
+Why are operators like MaxPool not quantized?
+
+8-bit type support for certain operators such as MaxPool was added in ONNX opset 12. Please check your model version and upgrade it to opset 12 and above.
+
+--- ANSWERS, condition R ---
+RA: A known limitation in ONNX Runtime is that model optimization during quantization pre-processing cannot output a model size greater than 2GB. Therefore, for large models, optimization must be skipped.
+RB: ONNX Runtime has a known limitation where model optimization can not output a model size greater than 2GB. So for large models, optimization must be skipped during pre-processing.
+--- ORACLE CONTEXT (condition O) = ['ort__quantization#004']; already shown above ---
+--- ANSWERS, condition O ---
+OA: A known limitation in ONNX Runtime is that model optimization cannot output a model size greater than 2GB. Therefore, for large models, the model optimization step must be skipped during quantization pre-processing.
+OB: A known limitation in ONNX Runtime when optimizing large models during quantization pre-processing is that the model size cannot exceed 2GB. If the model size exceeds this limit, model optimization must be skipped.
+
+##### Q28 [fact]
+QUESTION: What are the graph optimization levels in ONNX Runtime, and which are enabled by default?
+GOLD: Basic, Extended and Layout Optimizations; all optimizations are enabled by default.
+
+--- RETRIEVED CONTEXT (what the model saw in condition R) ---
+[1] ort__graph-optimizations#000 | Graph optimizations
+Graph optimizations
+
+ONNX Runtime provides various graph optimizations to improve performance. Graph optimizations are essentially graph-level transformations, ranging from small graph simplifications and node eliminations to more complex node fusions and layout optimizations.
+
+Graph optimizations are divided in several categories (or *levels*) based on their complexity and functionality. They can be performed either *online* or *offline*. In online mode, the optimizations are done before performing the inference, while in offline mode, the runtime saves the optimized graph to disk. ONNX Runtime provides Python, C#, C++, and C APIs to enable different optimization levels and to choose between offline vs. online mode.
+
+Below we provide details on the optimization levels, the online/offline mode, and the various APIs to control them.
+
+Graph Optimization Levels
+
+Graph optimizations are divided into three levels:
+
+1. Basic
+2. Extended
+3. Layout Optimizations
+
+The optimizations belonging to one level are performed after the optimizations of the previous level have been applied (e.g., extended optimizations are applied after basic optimizations have been applied).
+
+**All optimizations are enabled by default.**
+
+[2] ort__graph-optimizations#005 | Graph optimizations > Usage > Levels
+Levels
+
+ONNX Runtime defines the `GraphOptimizationLevel` enum to determine which of the aforementioned optimization levels will be enabled. Choosing a level enables the optimizations of that level, as well as the optimizations of all preceding levels. For example, enabling Extended optimizations, also enables Basic optimizations. The mapping of these levels to the enum is as follows:
+
+* GraphOptimizationLevel::ORT_DISABLE_ALL -> Disables all optimizations
+* GraphOptimizationLevel::ORT_ENABLE_BASIC -> Enables basic optimizations
+* GraphOptimizationLevel::ORT_ENABLE_EXTENDED -> Enables basic and extended optimizations
+* GraphOptimizationLevel::ORT_ENABLE_ALL -> Enables all available optimizations including layout optimizations
+
+Offline mode
+
+To enable serialization of the optimized model to disk, set the SessionOptions option `optimized_model_filepath`.
+
+Python API Example
+
+```python
+import onnxruntime as rt
+
+sess_options = rt.SessionOptions()
+
+# Set graph optimization level
+sess_options.graph_optimization_level = rt.GraphOptimizationLevel.ORT_ENABLE_EXTENDED
+
+# To enable model serialization after graph optimization set this
+sess_options.optimized_model_filepath = "<model_output_path\optimized_model.onnx>"
+
+session = rt.InferenceSession("<model_path>", sess_options)
+```
+
+[3] ort__graph-optimizations#004 | Graph optimizations > Graph Optimization Levels > Layout Optimizations
+Layout Optimizations
+
+These optimizations change the data layout for applicable nodes to achieve higher performance improvements. They are run after graph partitioning and are only applied to nodes assigned to CPU execution provider. Available layout optimizations are as follows:
+
+* NCHWc Optimizer: Optimizes the graph by using NCHWc layout instead of NCHW layout.
+
+Online/Offline Mode
+
+All optimizations can be performed either online or offline. In online mode, when initializing an inference session, we also apply all enabled graph optimizations before performing model inference. Applying all optimizations each time we initiate a session can add overhead to the model startup time (especially for complex models), which can be critical in production scenarios. This is where the offline mode can bring a lot of benefit. In offline mode, after performing graph optimizations, ONNX Runtime serializes the resulting model to disk. Subsequently, we can reduce startup time by using the already optimized model and disabling all optimizations.
+
+**Notes**:
+
+* When running in offline mode, make sure to use the exact same options (e.g., execution providers, optimization level) and hardware as the target machine that the model inference will run on (e.g., you cannot run a model pre-optimized for a GPU execution provider on a machine that is equipped only with CPU).
+* When layout optimizations are enabled, the offline mode can only be used on compatible hardware to the environment when the offline model is saved. For example, if model has layout optimized for AVX2, the offline model would require CPUs that support AVX2.
+
+[4] ort__graph-optimizations#002 | Graph optimizations > Graph Optimization Levels > Extended Graph Optimizations
+Extended Graph Optimizations
+
+These optimizations include complex node fusions. They are run after graph partitioning and are only applied to the nodes assigned to the CPU or CUDA or ROCm execution provider. Available extended graph optimizations are as follows:
+
+| Optimization                    | Execution Provider | Comment                                                                     |
+|---------------------------------|--------------------|-----------------------------------------------------------------------------|
+| GEMM Activation Fusion          | CPU                |                                                                             |
+| Matmul Add Fusion               | CPU                |                                                                             |
+| Conv Activation Fusion          | CPU                |                                                                             |
+| GELU Fusion                     | CPU, CUDA, ROCm    |                                                                             |
+| Layer Normalization Fusion      | CPU, CUDA, ROCm    |                                                                             |
+| BERT Embedding Layer Fusion     | CPU, CUDA, ROCm    | Fuse BERT embedding layer, layer normalization and attention mask length    |
+| Attention Fusion*               | CPU, CUDA, ROCm    |                                                                             |
+| Skip Layer Normalization Fusion | CPU, CUDA, ROCm    | Fuse bias of fully connected layer, skip connection and layer normalization |
+| Bias GELU Fusion                | CPU, CUDA, ROCm    | Fuse bias of fully connected layer and GELU activation                      |
+
+--- ANSWERS, condition R ---
+RA: ONNX Runtime defines three graph optimization levels: Basic, Extended, and Layout Optimizations. All optimizations are enabled by default.
+RB: ONNX Runtime defines three graph optimization levels: Basic, Extended, and Layout Optimizations. These levels are applied in sequence, with each subsequent level being applied after the previous one. All graph optimizations are enabled by default.
+--- ORACLE CONTEXT (condition O) = ['ort__graph-optimizations#000']; already shown above ---
+--- ANSWERS, condition O ---
+OA: Graph optimizations in ONNX Runtime are divided into three levels: Basic, Extended, and Layout Optimizations. The optimizations at each level are applied sequentially, with each subsequent level's optimizations being applied after the previous level's have been applied. All graph optimizations are enabled by default.
+OB: The graph optimization levels in ONNX Runtime are Basic, Extended, and Layout Optimizations. All optimizations are enabled by default.
+
+##### Q29 [compare]
+QUESTION: How do the PT2E post-training quantization and PT2E QAT flows differ?
+GOLD: Both capture the model with torch.export and end with convert_pt2e. PTQ uses prepare_pt2e followed by calibration, while QAT uses prepare_qat_pt2e followed by training, and after export QAT must use move_exported_model_to_eval instead of model.eval().
+
+--- RETRIEVED CONTEXT (what the model saw in condition R) ---
+[1] pytorch__pt2e_quant_x86_inductor#010 | PyTorch 2 Export Quantization with X86 Backend through Inductor > Quantization Aware Training
+Quantization Aware Training
+
+The PyTorch 2 Export Quantization-Aware Training (QAT) is now supported
+on X86 CPU using X86InductorQuantizer, followed by the subsequent
+lowering of the quantized model into Inductor. For a more in-depth
+understanding of PT2 Export Quantization-Aware Training, we recommend
+referring to the dedicated [PyTorch 2 Export Quantization-Aware
+Training](https://pytorch.org/tutorials/prototype/pt2e_quant_qat.html).
+
+The PyTorch 2 Export QAT flow is largely similar to the PTQ flow:
+
+[2] pytorch__pt2e_quant_qat#001 | PyTorch 2 Export Quantization-Aware Training (QAT)
+The PyTorch 2 Export QAT flow looks like the following—it is similar to
+the post training quantization (PTQ) flow for the most part:
+
+``` python
+import torch
+from torchao.quantization.pt2e.quantize_pt2e import (
+  prepare_qat_pt2e,
+  convert_pt2e,
+)
+from executorch.backends.xnnpack.quantizer.xnnpack_quantizer import (
+  get_symmetric_quantization_config,
+  XNNPACKQuantizer,
+)
+
+class M(torch.nn.Module):
+   def __init__(self):
+      super().__init__()
+      self.linear = torch.nn.Linear(5, 10)
+
+   def forward(self, x):
+      return self.linear(x)
+
+
+example_inputs = (torch.randn(1, 5),)
+m = M()
+
+# Step 1. program capture
+m = torch.export.export(m, example_inputs).module()
+# we get a model with aten ops
+
+# Step 2. quantization-aware training
+# backend developer will write their own Quantizer and expose methods to allow
+# users to express how they want the model to be quantized
+quantizer = XNNPACKQuantizer().set_global(get_symmetric_quantization_config())
+m = prepare_qat_pt2e(m, quantizer)
+
+# train omitted
+
+m = convert_pt2e(m)
+# we have a model with aten ops doing integer computations when possible
+
+# move the quantized model to eval mode, equivalent to `m.eval()`
+torchao.quantization.pt2e.move_exported_model_to_eval(m)
+```
+
+[3] pytorch__pt2e_quant_qat#000 | PyTorch 2 Export Quantization-Aware Training (QAT)
+PyTorch 2 Export Quantization-Aware Training (QAT)
+
+**Author**: [Andrew Or](https://github.com/andrewor14)
+
+This tutorial shows how to perform quantization-aware training (QAT) in
+graph mode based on
+[torch.export.export](https://pytorch.org/docs/main/export.html). For
+more details about PyTorch 2 Export Quantization in general, refer to
+the [post training quantization
+tutorial](https://docs.pytorch.org/ao/stable/tutorials_source/pt2e_quant_ptq.html)
+
+The PyTorch 2 Export QAT flow looks like the following—it is similar to
+the post training quantization (PTQ) flow for the most part:
+
+[4] tflite__post_training_quantization#000 | Post-training quantization
+Post-training quantization
+
+Post-training quantization is a conversion technique that can reduce model size
+while also improving CPU and hardware accelerator latency, with little
+degradation in model accuracy. You can quantize an already-trained float
+TensorFlow model when you convert it to TensorFlow Lite format using the
+[TensorFlow Lite Converter](../models/convert/).
+
+Note: The procedures on this page require TensorFlow 1.15 or higher.
+
+Optimization Methods
+
+There are several post-training quantization options to choose from. Here is a
+summary table of the choices and the benefits they provide:
+
+| Technique            | Benefits                  | Hardware         |
+| -------------------- | ------------------------- | ---------------- |
+| Dynamic range        | 4x smaller, 2x-3x speedup | CPU              |
+: quantization         :                           :                  :
+| Full integer         | 4x smaller, 3x+ speedup   | CPU, Edge TPU,   |
+: quantization         :                           : Microcontrollers :
+| Float16 quantization | 2x smaller, GPU           | CPU, GPU         |
+:                      : acceleration              :                  :
+
+The following decision tree can help determine which post-training quantization
+method is best for your use case:
+
+![post-training optimization options](images/optimization.jpg)
+
+--- ANSWERS, condition R ---
+RA: The PT2E post-training quantization (PTQ) flow and the PT2E Quantization Aware Training (QAT) flow are similar in many aspects, as they both aim to reduce model size and improve performance. However, the key difference lies in the approach taken during the training phase. PTQ is a post-training process where the model is already trained and quantization is applied to the already existing weights and activations. On the other hand, PT2E QAT involves quantization-aware training, where the model is trained with quantization in mind, allowing the model to learn quantization-aware representations during training. This means that during PT2E QAT, the model is trained with quantized weights and activations, which can lead to better performance and smaller model size compared to PTQ.
+RB: The PyTorch 2 Export (PT2E) post-training quantization (PTQ) flow and the PT2E Quantization-Aware Training (QAT) flow are similar in many aspects, but QAT involves training the model with quantization awareness to better handle the quantization process. PTQ quantizes a pre-trained model, whereas QAT quantizes the model during training, allowing the model to adapt to the quantization process.
+--- ORACLE CONTEXT (condition O) = ['pytorch__pt2e_quant_qat#001', 'pytorch__pt2e_quant_ptq#003']; extra chunks below ---
+pytorch__pt2e_quant_ptq#003 | PyTorch 2 Export Post Training Quantization
+The PyTorch 2 export quantization API looks like this:
+
+``` python
+import torch
+class M(torch.nn.Module):
+   def __init__(self):
+      super().__init__()
+      self.linear = torch.nn.Linear(5, 10)
+
+   def forward(self, x):
+      return self.linear(x)
+
+
+example_inputs = (torch.randn(1, 5),)
+m = M().eval()
+
+# Step 1. program capture
+m = torch.export.export(m, example_inputs).module()
+# we get a model with aten ops
+
+
+# Step 2. quantization
+from torchao.quantization.pt2e.quantize_pt2e import (
+  prepare_pt2e,
+  convert_pt2e,
+)
+
+# install executorch: `pip install executorch`
+from executorch.backends.xnnpack.quantizer.xnnpack_quantizer import (
+  get_symmetric_quantization_config,
+  XNNPACKQuantizer,
+)
+# backend developer will write their own Quantizer and expose methods to allow
+# users to express how they
+# want the model to be quantized
+quantizer = XNNPACKQuantizer().set_global(get_symmetric_quantization_config())
+m = prepare_pt2e(m, quantizer)
+
+# calibration omitted
+
+m = convert_pt2e(m)
+# we have a model with aten ops doing integer computations when possible
+```
+
+--- ANSWERS, condition O ---
+OA: The main difference between the PT2E post-training quantization and PT2E QAT flows is the inclusion of quantization-aware training in QAT. In QAT, the model is trained with quantization in mind, whereas in post-training quantization, the model is first trained without quantization considerations and then quantized afterward. This allows QAT to potentially improve model accuracy after quantization compared to post-training quantization.
+OB: The PT2E post-training quantization and PT2E QAT flows differ in the preparation phase. For QAT, the model is prepared for quantization-aware training, which involves setting up a quantizer and allowing users to express their quantization preferences. In contrast, for PT2E, the model is directly prepared for quantization without the need for quantization-aware training.
+
+##### Q30 [compare]
+QUESTION: How should users migrate from PyTorch's eager mode and FX graph mode quantization flows?
+GOLD: Eager mode quantization users should migrate to torchao's quantize_ API; FX graph mode users should migrate to torchao's pt2e quantization API (prepare_pt2e and convert_pt2e). pt2e quantization itself has moved to torchao.
+
+--- RETRIEVED CONTEXT (what the model saw in condition R) ---
+[1] pytorch__pt2e_quant_x86_inductor#001 | PyTorch 2 Export Quantization with X86 Backend through Inductor > Introduction
+Introduction
+
+This tutorial introduces the steps for utilizing the PyTorch 2 Export
+Quantization flow to generate a quantized model customized for the x86
+inductor backend and explains how to lower the quantized model into the
+inductor.
+
+The pytorch 2 export quantization flow uses the torch.export to capture
+the model into a graph and perform quantization transformations on top
+of the ATen graph. This approach is expected to have significantly
+higher model coverage, better programmability, and a simplified UX.
+TorchInductor is the new compiler backend that compiles the FX Graphs
+generated by TorchDynamo into optimized C++/Triton kernels.
+
+This flow of quantization 2 with Inductor supports both static and
+dynamic quantization. Static quantization works best for CNN models,
+like ResNet-50. And dynamic quantization is more suitable for NLP
+models, like RNN and BERT. For the difference between the two
+quantization types, please refer to the [following
+page](https://pytorch.org/docs/stable/quantization.html#quantization-mode-support).
+
+The quantization flow mainly includes three steps:
+
+- Step 1: Capture the FX Graph from the eager Model based on the [torch
+  export mechanism](https://pytorch.org/docs/main/export.html).
+- Step 2: Apply the Quantization flow based on the captured FX Graph,
+  including defining the backend-specific quantizer, generating the
+  prepared model with observers, performing the prepared model's
+  calibration or quantization-aware training, and converting the
+  prepared model into the quantized model.
+- Step 3: Lower the quantized model into inductor with the API
+  `torch.compile`.
+
+[2] pytorch__pt2e_quant_ptq#000 | PyTorch 2 Export Post Training Quantization
+PyTorch 2 Export Post Training Quantization
+
+**Author**: [Jerry Zhang](https://github.com/jerryzh168)
+
+This tutorial introduces the steps to do post training static
+quantization in graph mode based on
+[torch.\_export.export](https://pytorch.org/docs/main/export.html).
+Compared to [FX Graph Mode
+Quantization](https://pytorch.org/tutorials/prototype/fx_graph_mode_ptq_static.html),
+this flow is expected to have significantly higher model coverage ([88%
+on 14K
+models](https://github.com/pytorch/pytorch/issues/93667#issuecomment-1601171596)),
+better programmability, and a simplified UX.
+
+Exportable by <span class="title-ref">torch.export.export</span> is a
+prerequisite to use the flow, you can find what are the constructs
+that's supported in [Export
+DB](https://pytorch.org/docs/main/generated/exportdb/index.html).
+
+The high level architecture of quantization 2 with quantizer could look
+like this:
+
+[3] pytorch__pt2e_quant_ptq#023 | PyTorch 2 Export Post Training Quantization > Debugging the Quantized Model
+Debugging the Quantized Model
+
+You can use [Numeric
+Suite](https://pytorch.org/docs/stable/quantization-accuracy-debugging.html#numerical-debugging-tooling-prototype)
+that can help with debugging in eager mode and FX graph mode. The new
+version of Numeric Suite working with PyTorch 2 Export models is still
+in development.
+
+Lowering and Performance Evaluation
+
+The model produced at this point is not the final model that runs on the
+device, it is a reference quantized model that captures the intended
+quantized computation from the user, expressed as ATen operators and
+some additional quantize/dequantize operators, to get a model that runs
+on real devices, we'll need to lower the model. For example, for the
+models that run on edge devices, we can lower with delegation and
+ExecuTorch runtime operators.
+
+Conclusion
+
+In this tutorial, we went through the overall quantization flow in
+PyTorch 2 Export Quantization using `XNNPACKQuantizer` and got a
+quantized model that could be further lowered to a backend that supports
+inference with XNNPACK backend. To use this for your own backend, please
+first follow the
+[tutorial](https://pytorch.org/tutorials/prototype/pt2e_quantizer.html)
+and implement a `Quantizer` for your backend, and then quantize the
+model with that `Quantizer`.
+
+[4] pytorch__pt2e_quant_ptq#004 | PyTorch 2 Export Post Training Quantization > Motivation of PyTorch 2 Export Quantization
+Motivation of PyTorch 2 Export Quantization
+
+In PyTorch versions prior to 2, we have FX Graph Mode Quantization that
+uses
+[QConfigMapping](https://pytorch.org/docs/main/generated/torch.ao.quantization.qconfig_mapping.QConfigMapping.html)
+and
+[BackendConfig](https://pytorch.org/docs/stable/generated/torch.ao.quantization.backend_config.BackendConfig.html)
+for customizations. `QConfigMapping` allows modeling users to specify
+how they want their model to be quantized, `BackendConfig` allows
+backend developers to specify the supported ways of quantization in
+their backend. While that API covers most use cases relatively well, it
+is not fully extensible. There are two main limitations for the current
+API:
+
+- Limitation around expressing quantization intentions for complicated
+  operator patterns (how an operator pattern should be
+  observed/quantized) using existing objects: `QConfig` and
+  `QConfigMapping`.
+- Limited support on how user can express their intention of how they
+  want their model to be quantized. For example, if users want to
+  quantize the every other linear in the model, or the quantization
+  behavior has some dependency on the actual shape of the Tensor (for
+  example, only observe/quantize inputs and outputs when the linear has
+  a 3D input), backend developer or modeling users need to change the
+  core quantization API/flow.
+
+A few improvements could make the existing flow better:
+
+--- ANSWERS, condition R ---
+RA: I cannot find this in the provided documents.
+RB: Users should migrate from PyTorch's eager mode and FX graph mode quantization flows by following the PyTorch 2 Export Quantization flow. This involves using `torch.export` to capture the model into a graph, applying the quantization flow, and then lowering the quantized model into a backend that supports inference, such as XNNPACK. They need to implement a `Quantizer` for their specific backend and use the `XNNPACKQuantizer` as a reference.
+--- ORACLE CONTEXT (condition O) = ['pytorch__quantization#001']; extra chunks below ---
+pytorch__quantization#001 | Quantization
+Quantization
+
+```{eval-rst}
+.. automodule:: torch.ao.quantization
+.. automodule:: torch.ao.quantization.fx
+```
+
+We are centralizing all quantization related development to [torchao](https://github.com/pytorch/ao), please checkout our new doc page: <https://docs.pytorch.org/ao/stable/index.html>
+
+Plan for the existing quantization flows:
+
+1. **Eager mode quantization** (`torch.ao.quantization.quantize`, `torch.ao.quantization.quantize_dynamic`): please migrate to use torchao eager mode [`quantize_`](https://docs.pytorch.org/ao/main/api_reference/generated/torchao.quantization.quantize_.html#torchao.quantization.quantize_) API instead.
+
+2. **FX graph mode quantization** (`torch.ao.quantization.quantize_fx.prepare_fx`, `torch.ao.quantization.quantize_fx.convert_fx`): please migrate to use torchao pt2e quantization API instead (`torchao.quantization.pt2e.quantize_pt2e.prepare_pt2e`, `torchao.quantization.pt2e.quantize_pt2e.convert_pt2e`).
+
+--- ANSWERS, condition O ---
+OA: Users should migrate from PyTorch's eager mode quantization flows to use the `torchao.quantization.quantize_` API instead. For FX graph mode quantization, they should switch to the `torchao.quantization.pt2e.quantize_pt2e.prepare_pt2e` and `torchao.quantization.pt2e.quantize_pt2e.convert_pt2e` APIs. I cannot find this in the provided documents.
+OB: For users migrating from PyTorch's eager mode quantization, they should use the `torchao.quantization.quantize_` API instead of the `torch.ao.quantization.quantize` or `torch.ao.quantization.quantize_dynamic` functions. For FX graph mode quantization, users should switch to using the `torchao.quantization.pt2e.quantize_pt2e.prepare_pt2e` and `torchao.quantization.pt2e.quantize_pt2e.convert_pt2e` functions instead of `torch.ao.quantization.quantize_fx.prepare_fx` and `torch.ao.quantization.quantize_fx.convert_fx`. These changes align with the plan for migrating existing quantization flows to the new torchao framework.

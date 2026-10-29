@@ -1,0 +1,472 @@
+##### Q36 [unanswerable]
+QUESTION: What perplexity does Qwen2.5-3B reach at Q2_K quantization?
+GOLD: Not stated in the documents.
+
+--- RETRIEVED CONTEXT (what the model saw in condition R) ---
+[1] pytorch__finetuning#016 | (Part 2) Fine-tuning with QAT, QLoRA, and float8 > Float8 Quantized Fine-tuning
+Initial experiments saw up to 16.5% throughput improvement for
+fine-tuning Llama3.2-3B in float8:
+
+``` 
+experiment_name         tok/s                 peak_mem_reserved
+----------------------  -------------------   -------------------
+bf16                    6502.143 (+0.000%)    30.090 (+0.000%)
+fp8_noname              7205.386 (+10.816%)   30.010 (-0.266%)
+fp8_tensorwise          7222.198 (+11.074%)   30.010 (-0.266%)
+fp8_rowwise             6387.968 (-1.756%)    29.158 (-3.096%)
+fp8_rowwise_with_gw_hp  7573.698 (+16.480%)   29.516 (-1.908%)
+
+experiment_name         hellaswag_acc    wikitext_word_perplexity
+----------------------  ---------------  --------------------------
+bf16                    0.533 (+0.000)   12.407 (+0.000)
+
+[2] tflite__quantization_debugger#011 | Inspecting Quantization Errors with Quantization Debugger > Selective Quantization
+Selective Quantization
+
+Selective quantization skips quantization for some nodes, so that the
+calculation can happen in the original floating-point domain. When correct
+layers are skipped, we can expect some model quality recovery at the cost of
+increased latency and model size.
+
+However, if you're planning to run quantized models on integer-only accelerators
+(e.g. Hexagon DSP, EdgeTPU), selective quantization would cause fragmentation of
+the model and would result in slower inference latency mainly caused by data
+transfer cost between CPU and those accelerators. To prevent this, you can
+consider running
+[quantization aware training](https://www.tensorflow.org/model_optimization/guide/quantization/training)
+to keep all the layers in integer while preserving the model accuracy.
+
+Quantization debugger's option accepts `denylisted_nodes` and `denylisted_ops`
+options for skipping quantization for specific layers, or all instances of
+specific ops. Using the `suspected_layers` we prepared from the previous step, we
+can use a quantization debugger to get a selectively quantized model.
+
+```python
+debug_options = tf.lite.experimental.QuantizationDebugOptions(
+    denylisted_nodes=suspected_layers)
+debugger = tf.lite.experimental.QuantizationDebugger(
+    converter=converter,
+    debug_dataset=representative_dataset(ds),
+    debug_options=debug_options)
+```
+
+```python
+selective_quantized_model = debugger.get_nondebug_quantized_model()
+eval_tflite(selective_quantized_model, ds)
+```
+
+[3] ort__quantization#008 | Quantize ONNX models > Quantizing an ONNX model > <a name="qdqdebug"></a>Quantization Debugging
+In summary, ONNX Runtimes provides Python APIs for matching up corresponding weights and activation
+tensors between a float32 model and its quantized counterpart. This allows the user to easily
+compare them to locate where are the biggest differences.
+
+Model optimization during quantization creates difficulties for this debugging process though,
+since it may changes the computation graph in a significant way, resulting in a quantized model
+that is drastically different from the original. This makes it hard to match up corresponding
+tensors from the two models. As a result, we recommend performing model optimization during
+pre-processing instead of the quantization process.
+
+[4] tflite__quantization_spec#004 | TensorFlow Lite 8-bit quantization specification > Symmetric vs asymmetric
+$$a_j \cdot b_k = \sum_{i=0}^{n} a_{j}^{(i)} b_{k}^{(i)} =
+\sum_{i=0}^{n} (q_{a}^{(i)} - z_a) (q_{b}^{(i)} - z_b) =
+\sum_{i=0}^{n} q_{a}^{(i)} q_{b}^{(i)} - \sum_{i=0}^{n} q_{a}^{(i)} z_b -
+\sum_{i=0}^{n} q_{b}^{(i)} z_a + \sum_{i=0}^{n} z_a z_b$$
+
+<!-- Don't change these `\\(` `\\)` to `$`. mathjax fails here with `$`-->
+
+The \\(\sum_{i=0}^{n} q_{a}^{(i)} q_{b}^{(i)}\\) term is unavoidable since it’s
+performing the dot product of the input value and the weight value.
+
+The $$\sum_{i=0}^{n} q_{b}^{(i)} z_a$$ and $$\sum_{i=0}^{n} z_a z_b$$ terms are
+made up of constants that remain the same per inference invocation, and thus can
+be pre-calculated.
+
+--- ANSWERS, condition R ---
+RA: I cannot find this in the provided documents.
+RB: I cannot find this in the provided documents.
+
+##### Q37 [unanswerable]
+QUESTION: How does the AWQ algorithm decide which weight channels to protect from quantization error?
+GOLD: Not stated in the documents.
+
+--- RETRIEVED CONTEXT (what the model saw in condition R) ---
+[1] pytorch__quantization_overview#001 | Quantization Overview
+Quantization Overview
+
+First we want to lay out the torchao stack:
+
+Quantization Algorithms/Flows: weight only/dynamic/static quantization, hqq, awq, gptq etc.
+    ---------------------------------------------------------------------------------------------
+        Quantized Tensors (derived dtypes): Int4Tensor, Int4PreshuffledTensor, Int8Tensor, Float8Tensor
+    ---------------------------------------------------------------------------------------------
+      Quantization Primitive Ops/Efficient Kernels: matmul, quantize, dequantize
+    ---------------------------------------------------------------------------------------------
+                Basic dtypes: uint1-uint7, int1-int8, float3-float8
+
+[2] pytorch__inference#000 | Quantized Inference
+Quantized Inference
+
+For inference, we support dynamic and weight-only quantization of `torch.nn.funtional.linear` across various dtype configurations.
+The pseudocode is as follows:
+
+```python
+# high precision (baseline)
+output_bf16 = input_bf16 @ weight_bf16.t()
+
+# dynamic quantization (shown for fp8 rowwise)
+output_bf16 = to_fp8(input_bf16) @ to_fp8(weight_fp8.t())
+
+# weight-only quantization (shown for int4)
+output_bf16 = input_bf16 @ weight_int4.t()
+```
+
+[3] pytorch__finetuning#005 | (Part 2) Fine-tuning with QAT, QLoRA, and float8 > Quantization-Aware Training (QAT) > Option 1: Unsloth QAT Integration
+The `qat_scheme` parameter controls the fake quantization scheme applied
+during training. After fine-tuning, the model is converted to actual
+int4 quantization with no additional inference overhead.
+
+On harder benchmarks than perplexity, Int4 QAT + LoRA recovers a
+substantial fraction of the accuracy lost to quantization. The numbers
+below are taken from the [TorchAO QAT
+blog](https://pytorch.org/blog/quantization-aware-training-in-torchao-ii/)
+(int4, `group_size=32`):
+
+``` 
+Model          Benchmark   Accuracy gain from QAT   Degradation recovered
+-------------  ----------  -----------------------  ----------------------
+Gemma3-4B-it   GPQA        +1.0%                    66.9%
+Gemma3-12B-it  BBH         +2.1%                    45.5%
+Qwen3-4B       MMLU Pro    +2.0%                    36.0%
+Llama-3.2-3B   MMLU Pro    +0.7%                    (of 2.0% degradation)
+```
+
+[4] tflite__model_optimization#009 | Model optimization > Types of optimization > Full integer quantization with int16 activations and int8 weights
+    <tr><td>MobileNetV2</td><td>Top-1 Accuracy</td><td>0.718</td><td>0.7126</td>
+      <td>0.7137</td></tr>
+    <tr><td>MobileBert</td><td>F1(Exact match)</td><td>88.81(81.23)</td><td>2.08(0)</td>
+      <td>88.73(81.15)</td></tr>
+ </table>
+  <figcaption>
+    <b>Table 2</b> Benefits of model quantization with int16 activations
+  </figcaption>
+</figure>
+
+--- ANSWERS, condition R ---
+RA: I cannot find this in the provided documents.
+RB: I cannot find this in the provided documents.
+
+##### Q38 [unanswerable]
+QUESTION: How much does int8 quantization speed up inference on the Apple Neural Engine?
+GOLD: Not stated in the documents.
+
+--- RETRIEVED CONTEXT (what the model saw in condition R) ---
+[1] pytorch__inference#014 | Quantized Inference > Other Available Quantization Techniques > Int8DynamicActivationIntxWeightConfig Quantization
+Int8DynamicActivationIntxWeightConfig Quantization
+
+We have kernels that do 8-bit dynamic quantization of activations and uintx groupwise quantization of weights.  These kernels are experimental and can only be run on a device with an ARM CPU (e.g., a Mac computers with Apple silicon).  The benchmarks below were run on an M1 Mac Pro, with 8 perf cores, and 2 efficiency cores, and 32GB of RAM.  In all cases, torch.compile was used.
+
+| Model         | Technique                                        | Tokens/Second | Memory Bandwidth (GB/s) | Peak Memory (GB) | Model Size (GB) |
+| ------------- | -------------------------------------------------| --------------| ------------------------| ---------------- | ----------------|
+| Llama-3.1-8B  | Base (bfloat16)                                  |  1.24         |  18.62                  |  NA              | 15.01           |
+|               | int8_dynamic_activation_intx_weight-4-256-false  |  16.03        |  65.81                  |  NA              | 4.11            |
+|               | int8_dynamic_activation_intx_weight-3-256-false  |  18.94        |  59.97                  |  NA              | 3.17            |
+
+[2] pytorch__first_quantization_example#005 | First Quantization Example > W8A8-INT: 8-bit Dynamic Activation and Weight Quantization > Speedup Comparison
+Output:
+
+Speedup: 1.03x
+
+> [!NOTE]
+> The speedup results can vary significantly based on hardware and
+> model. We recommend CUDA-enabled GPUs and models larger than 8B for
+> best performance.
+
+Both weights and activations are quantized to int8, reducing model size
+by ~2x. Speedup is not enough in small toy model because it requires
+dynamic overhead. For comprehensive benchmark results and detailed
+evaluation workflows on production models, see the [quantization
+benchmarks](../workflows/inference.html).
+
+We will address how to evaluate quantized model using
+<span class="title-ref">vLLM</span> and
+<span class="title-ref">lm-eval</span> in [model serving](serving.html)
+post.
+
+[3] ort__quantization#019 | Quantize ONNX models > FAQ > Why am I not seeing performance improvements?
+Why am I not seeing performance improvements?
+
+The performance improvement depends on your model and hardware. The performance gain from quantization has two aspects: compute and memory. Old hardware has none or few of the instructions needed to perform efficient inference in int8. And quantization has overhead (from quantizing and dequantizing), so it is not rare to get worse performance on old devices.
+
+x86-64 with VNNI, GPU with Tensor Core int8 support and Arm®-based processors with dot-product instructions can get better performance in general.
+
+Which quantization method should I choose, dynamic or static?
+
+Please refer to the [Method selection](#method-selection) section.
+
+When to use reduce-range and per-channel quantization?
+
+Reduce-range will quantize the weights to 7 bits. It is designed for the U8S8 format on AVX2 and AVX512 (non-VNNI) machines to mitigate [saturation issues](#data-type-selection). This is not needed on machines supporting VNNI.
+
+Per-channel quantization can improve the accuracy for models whose weight ranges are large. Try it if the accuracy loss is large. On AVX2 and AVX512 machines, you will generally need to enable reduce-range as well if per-channel is enabled.
+
+Why are operators like MaxPool not quantized?
+
+8-bit type support for certain operators such as MaxPool was added in ONNX opset 12. Please check your model version and upgrade it to opset 12 and above.
+
+[4] pytorch__first_quantization_example#004 | First Quantization Example > W8A8-INT: 8-bit Dynamic Activation and Weight Quantization > Speedup Comparison
+Speedup Comparison
+
+Let's demonstrate that not only is the quantized model smaller, but it
+is also faster.
+
+``` py
+import time
+
+# Optional: compile model for faster inference and generation
+model_w16a16 = torch.compile(model, mode="max-autotune", fullgraph=True)
+model_w8a8 = torch.compile(model_w8a8, mode="max-autotune", fullgraph=True)
+
+# Get example inputs
+example_inputs = model_w8a8.example_inputs(batch_size=128)
+
+# Warmup
+for _ in range(10):
+    _ = model_w8a8(*example_inputs)
+    _ = model_w16a16(*example_inputs)
+torch.cuda.synchronize()
+
+# Throughput: original model
+torch.cuda.synchronize()
+start = time.time()
+for _ in range(100):
+    _ = model_w16a16(*example_inputs)
+torch.cuda.synchronize()
+original_time = time.time() - start
+
+# Throughput: Quantized (W8A8-INT) model
+torch.cuda.synchronize()
+start = time.time()
+for _ in range(100):
+    _ = model_w8a8(*example_inputs)
+torch.cuda.synchronize()
+quantized_time = time.time() - start
+
+print(f"Speedup: {original_time / quantized_time:.2f}x")
+```
+
+Output:
+
+Speedup: 1.03x
+
+--- ANSWERS, condition R ---
+RA: I cannot find this in the provided documents.
+RB: I cannot find this in the provided documents.
+
+##### Q39 [unanswerable]
+QUESTION: What is the latency of an int8 MobileNetV2 in TFLite on a Raspberry Pi 4?
+GOLD: Not stated in the documents.
+
+--- RETRIEVED CONTEXT (what the model saw in condition R) ---
+[1] tflite__model_optimization#001 | Model optimization > Why models should be optimized > Latency reduction
+Latency reduction
+
+*Latency* is the amount of time it takes to run a single inference with a given
+model. Some forms of optimization can reduce the amount of computation required
+to run inference using a model, resulting in lower latency. Latency can also
+have an impact on power consumption.
+
+Currently, quantization can be used to reduce latency by simplifying the
+calculations that occur during inference, potentially at the expense of some
+accuracy.
+
+Accelerator compatibility
+
+Some hardware accelerators, such as the
+[Edge TPU](https://cloud.google.com/edge-tpu/), can run inference extremely fast
+with models that have been correctly optimized.
+
+Generally, these types of devices require models to be quantized in a specific
+way. See each hardware accelerator's documentation to learn more about their
+requirements.
+
+Trade-offs
+
+Optimizations can potentially result in changes in model accuracy, which must be
+considered during the application development process.
+
+The accuracy changes depend on the individual model being optimized, and are
+difficult to predict ahead of time. Generally, models that are optimized for
+size or latency will lose a small amount of accuracy. Depending on your
+application, this may or may not impact your users' experience. In rare cases,
+certain models may gain some accuracy as a result of the optimization process.
+
+Types of optimization
+
+TensorFlow Lite currently supports optimization via quantization, pruning and
+clustering.
+
+These are part of the
+[TensorFlow Model Optimization Toolkit](https://www.tensorflow.org/model_optimization),
+which provides resources for model optimization techniques that are compatible
+with TensorFlow Lite.
+
+[2] tflite__model_optimization#005 | Model optimization > Types of optimization > Quantization
+Below are the latency and accuracy results for post-training quantization and
+quantization-aware training on a few models. All latency numbers are measured on
+Pixel 2 devices using a single big core CPU. As the toolkit improves, so will
+the numbers here:
+
+<figure>
+  <table>
+    <tr>
+      <th>Model</th>
+      <th>Top-1 Accuracy (Original) </th>
+      <th>Top-1 Accuracy (Post Training Quantized) </th>
+      <th>Top-1 Accuracy (Quantization Aware Training) </th>
+      <th>Latency (Original) (ms) </th>
+      <th>Latency (Post Training Quantized) (ms) </th>
+      <th>Latency (Quantization Aware Training) (ms) </th>
+      <th> Size (Original) (MB)</th>
+      <th> Size (Optimized) (MB)</th>
+    </tr> <tr><td>Mobilenet-v1-1-224</td><td>0.709</td><td>0.657</td><td>0.70</td>
+      <td>124</td><td>112</td><td>64</td><td>16.9</td><td>4.3</td></tr>
+    <tr><td>Mobilenet-v2-1-224</td><td>0.719</td><td>0.637</td><td>0.709</td>
+      <td>89</td><td>98</td><td>54</td><td>14</td><td>3.6</td></tr>
+
+[3] pytorch__finetuning#016 | (Part 2) Fine-tuning with QAT, QLoRA, and float8 > Float8 Quantized Fine-tuning
+Initial experiments saw up to 16.5% throughput improvement for
+fine-tuning Llama3.2-3B in float8:
+
+``` 
+experiment_name         tok/s                 peak_mem_reserved
+----------------------  -------------------   -------------------
+bf16                    6502.143 (+0.000%)    30.090 (+0.000%)
+fp8_noname              7205.386 (+10.816%)   30.010 (-0.266%)
+fp8_tensorwise          7222.198 (+11.074%)   30.010 (-0.266%)
+fp8_rowwise             6387.968 (-1.756%)    29.158 (-3.096%)
+fp8_rowwise_with_gw_hp  7573.698 (+16.480%)   29.516 (-1.908%)
+
+experiment_name         hellaswag_acc    wikitext_word_perplexity
+----------------------  ---------------  --------------------------
+bf16                    0.533 (+0.000)   12.407 (+0.000)
+
+[4] pytorch__serving#011 | (Part 3) Serving on vLLM, SGLang, ExecuTorch > Post-training Quantization with HuggingFace > Serving and Inference with SGLang
+The .pte file can be run with ExecuTorch on a mobile phone. Follow the
+[instructions](https://docs.pytorch.org/executorch/main/llm/llama-demo-ios.html)
+for doing this on an iOS device.
+
+Mobile Performance Characteristics ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The torchao-optimized 8da4w model provides:
+
+- **Memory**: ~3.2GB on iPhone 15 Pro
+- **Speed**: ~17 tokens/sec on iPhone 15 Pro
+- **Accuracy**: Maintained within 5-10% of original model on most
+  benchmarks
+
+> [!NOTE]
+> For detailed instructions on testing the ExecuTorch model and
+> reproducing benchmarks please refer to the [HF
+> Phi-4-mini-instruct-8da4w
+> model](https://huggingface.co/pytorch/Phi-4-mini-instruct-8da4w).
+
+Evaluation ---------
+
+Model Quality Assessment ^^^^^^^^^^^^^^^^^^^^^^
+
+Evaluate quantized models using lm-evaluation-harness:
+
+--- ANSWERS, condition R ---
+RA: I cannot find this in the provided documents.
+RB: I cannot find this in the provided documents.
+
+##### Q40 [unanswerable]
+QUESTION: How does GPTQ compute the Hessian used to update the remaining weights after quantizing each column?
+GOLD: Not stated in the documents.
+
+--- RETRIEVED CONTEXT (what the model saw in condition R) ---
+[1] pytorch__quantization_overview#017 | Quantization Overview > Case Study: How float8 dynamic activation and float8 weight quantization works in torchao? > During Model Execution
+# omitting kernel_preference related code
+        # granularity checks, let's say we are doing rowwise quant
+        # both input_tensor and weight_tensor will now be Float8Tensor
+        xq = input_tensor.qdata.reshape(-1, input_tensor.qdata.shape[-1])
+        wq = weight_tensor.qdata.contiguous()
+        x_scale = input_tensor.scale
+        w_scale = weight_tensor.scale
+        res = torch.ops.mslk.f8f8bf16_rowwise(
+           xq,
+           wq,
+           x_scale,
+           w_scale,
+        ).reshape(out_shape)
+        return res
+
+The function first quantizes the input to be `Float8Tensor`, then get
+the raw float Tensor and scale from both the input and weight Tensor:
+`t.qdata`, `t.scale`, and calls the mslk kernel to do the matrix
+multiplication for float8 dynamic quantization:
+`torch.ops.mslk.f8f8bf16_rowwise`.
+
+[2] pytorch__quantization_overview#001 | Quantization Overview
+Quantization Overview
+
+First we want to lay out the torchao stack:
+
+Quantization Algorithms/Flows: weight only/dynamic/static quantization, hqq, awq, gptq etc.
+    ---------------------------------------------------------------------------------------------
+        Quantized Tensors (derived dtypes): Int4Tensor, Int4PreshuffledTensor, Int8Tensor, Float8Tensor
+    ---------------------------------------------------------------------------------------------
+      Quantization Primitive Ops/Efficient Kernels: matmul, quantize, dequantize
+    ---------------------------------------------------------------------------------------------
+                Basic dtypes: uint1-uint7, int1-int8, float3-float8
+
+[3] pytorch__inference#000 | Quantized Inference
+Quantized Inference
+
+For inference, we support dynamic and weight-only quantization of `torch.nn.funtional.linear` across various dtype configurations.
+The pseudocode is as follows:
+
+```python
+# high precision (baseline)
+output_bf16 = input_bf16 @ weight_bf16.t()
+
+# dynamic quantization (shown for fp8 rowwise)
+output_bf16 = to_fp8(input_bf16) @ to_fp8(weight_fp8.t())
+
+# weight-only quantization (shown for int4)
+output_bf16 = input_bf16 @ weight_int4.t()
+```
+
+[4] tflite__post_training_quant#002 | Post-training dynamic range quantization > Overview
+Overview
+
+[TensorFlow Lite](https://www.tensorflow.org/lite/) now supports
+converting weights to 8-bit precision as part of model conversion from
+tensorflow graphdefs to TensorFlow Lite's flat buffer format. Dynamic range quantization achieves a 4x reduction in the model size. In addition, TFLite supports on-the-fly quantization and dequantization of activations to allow for:
+
+1.  Using quantized kernels for faster implementation when available.
+2.  Mixing of floating-point kernels with quantized kernels for different parts
+    of the graph.
+
+The activations are always stored in floating point. For ops that
+support quantized kernels, the activations are quantized to 8 bits of precision
+dynamically prior to processing and are de-quantized to float precision after
+processing. Depending on the model being converted, this can give a speedup over
+pure floating point computation.
+
+In contrast to
+[quantization aware training](https://github.com/tensorflow/tensorflow/tree/r1.14/tensorflow/contrib/quantize)
+, the weights are quantized post training and the activations are quantized dynamically 
+at inference in this method.
+Therefore, the model weights are not retrained to compensate for quantization
+induced errors. It is important to check the accuracy of the quantized model to
+ensure that the degradation is acceptable.
+
+This tutorial trains an MNIST model from scratch, checks its accuracy in
+TensorFlow, and then converts the model into a Tensorflow Lite flatbuffer
+with dynamic range quantization. Finally, it checks the
+accuracy of the converted model and compares it to the original float model.
+
+--- ANSWERS, condition R ---
+RA: I cannot find this in the provided documents.
+RB: I cannot find this in the provided documents.

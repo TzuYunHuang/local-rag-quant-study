@@ -1,0 +1,563 @@
+##### Q16 [number]
+QUESTION: How many samples does TFLite recommend for the representative dataset in full integer quantization?
+GOLD: Around 100-500 samples, a small subset of the training or validation data.
+
+--- RETRIEVED CONTEXT (what the model saw in condition R) ---
+[1] tflite__post_training_quantization#008 | Post-training quantization > Integer only: 16-bit activations with 8-bit weights (experimental)
+If 16x8 quantization is not supported for some operators in the model,
+then the model still can be quantized, but unsupported operators kept in float.
+The following option should be added to the target_spec to allow this.
+<pre>
+import tensorflow as tf
+converter = tf.lite.TFLiteConverter.from_saved_model(saved_model_dir)
+converter.representative_dataset = representative_dataset
+converter.optimizations = [tf.lite.Optimize.DEFAULT]
+converter.target_spec.supported_ops = [tf.lite.OpsSet.EXPERIMENTAL_TFLITE_BUILTINS_ACTIVATIONS_INT16_WEIGHTS_INT8,
+<b>tf.lite.OpsSet.TFLITE_BUILTINS</b>]
+tflite_quant_model = converter.convert()
+</pre>
+
+Examples of the use cases where accuracy improvements provided by this
+quantization scheme include:
+
+*   super-resolution,
+*   audio signal processing such as noise cancelling and beamforming,
+*   image de-noising,
+*   HDR reconstruction from a single image.
+
+The disadvantage of this quantization is:
+
+*   Currently inference is noticeably slower than 8-bit full integer due to the
+    lack of optimized kernel implementation.
+*   Currently it is incompatible with the existing hardware accelerated TFLite
+    delegates.
+
+Note: This is an experimental feature.
+
+A tutorial for this quantization mode can be found
+[here](post_training_integer_quant_16x8.ipynb).
+
+[2] tflite__post_training_quantization#007 | Post-training quantization > Integer only: 16-bit activations with 8-bit weights (experimental)
+Integer only: 16-bit activations with 8-bit weights (experimental)
+
+This is an experimental quantization scheme. It is similar to the "integer only"
+scheme, but activations are quantized based on their range to 16-bits, weights
+are quantized in 8-bit integer and bias is quantized into 64-bit integer. This
+is referred to as 16x8 quantization further.
+
+The main advantage of this quantization is that it can improve accuracy
+significantly, but only slightly increase model size.
+
+<pre>
+import tensorflow as tf
+converter = tf.lite.TFLiteConverter.from_saved_model(saved_model_dir)
+converter.representative_dataset = representative_dataset
+<b>converter.optimizations = [tf.lite.Optimize.DEFAULT]
+converter.target_spec.supported_ops = [tf.lite.OpsSet.EXPERIMENTAL_TFLITE_BUILTINS_ACTIVATIONS_INT16_WEIGHTS_INT8]</b>
+tflite_quant_model = converter.convert()
+</pre>
+
+[3] tflite__post_training_quantization#002 | Post-training quantization > Full integer quantization
+Full integer quantization
+
+You can get further latency improvements, reductions in peak memory usage, and
+compatibility with integer only hardware devices or accelerators by making sure
+all model math is integer quantized.
+
+For full integer quantization, you need to calibrate or estimate the range, i.e,
+(min, max) of all floating-point tensors in the model. Unlike constant tensors
+such as weights and biases, variable tensors such as model input, activations
+(outputs of intermediate layers) and model output cannot be calibrated unless we
+run a few inference cycles. As a result, the converter requires a representative
+dataset to calibrate them. This dataset can be a small subset (around ~100-500
+samples) of the training or validation data. Refer to the
+`representative_dataset()` function below.
+
+From TensorFlow 2.7 version, you can specify the representative dataset through
+a [signature](../guide/signatures.ipynb) as the following example:
+
+<pre>
+def representative_dataset():
+  for data in dataset:
+    yield {
+      "image": data.image,
+      "bias": data.bias,
+    }
+</pre>
+
+If there are more than one signature in the given TensorFlow model, you can
+specify the multiple dataset by specifying the signature keys:
+
+<pre>
+def representative_dataset():
+  # Feed data set for the "encode" signature.
+  for data in encode_signature_dataset:
+    yield (
+      "encode", {
+        "image": data.image,
+        "bias": data.bias,
+      }
+    )
+
+# Feed data set for the "decode" signature.
+  for data in decode_signature_dataset:
+    yield (
+      "decode", {
+        "image": data.image,
+        "hint": data.hint,
+      },
+    )
+</pre>
+
+[4] tflite__post_training_integer_quant#014 | Post-training integer quantization > Run the TensorFlow Lite models > Test the models on one image
+Test the models on one image
+
+Now we'll compare the performance of the float model and quantized model:
++ `tflite_model_file` is the original TensorFlow Lite model with floating-point data.
++ `tflite_model_quant_file` is the last model we converted using integer-only quantization (it uses uint8 data for input and output).
+
+Let's create another function to print our predictions:
+
+```python
+import matplotlib.pylab as plt
+
+# Change this to test a different image
+test_image_index = 1
+
+## Helper function to test the models on one image
+def test_model(tflite_file, test_image_index, model_type):
+  global test_labels
+
+  predictions = run_tflite_model(tflite_file, [test_image_index])
+
+  plt.imshow(test_images[test_image_index])
+  template = model_type + " Model \n True:{true}, Predicted:{predict}"
+  _ = plt.title(template.format(true= str(test_labels[test_image_index]), predict=str(predictions[0])))
+  plt.grid(False)
+```
+
+Now test the float model:
+
+```python
+test_model(tflite_model_file, test_image_index, model_type="Float")
+```
+
+And test the quantized model:
+
+```python
+test_model(tflite_model_quant_file, test_image_index, model_type="Quantized")
+```
+
+--- ANSWERS, condition R ---
+RA: TFLite recommends a representative dataset of around ~100-500 samples for full integer quantization in order to calibrate variable tensors such as model input, activations, and model output.
+RB: For the representative dataset in the context of full integer quantization, TFLite recommends a small subset of around 100-500 samples from the training or validation data. This is necessary to calibrate the range of the variable tensors such as model input, activations, and output, which cannot be calibrated using only constant tensors like weights and biases. This calibration is crucial for ensuring the accuracy of the quantized model.
+RC: TFLite recommends a representative dataset of around ~100-500 samples for full integer quantization in model calibration.
+RD: TFLite recommends a representative dataset of around ~100-500 samples for full integer quantization in order to calibrate variable tensors such as model input, activations, and model output.
+--- ORACLE CONTEXT (condition O) = ['tflite__post_training_quantization#002']; already shown above ---
+--- ANSWERS, condition O ---
+OA: TFLite recommends a representative dataset of around ~100-500 samples for full integer quantization.
+OB: TFLite recommends a representative dataset of around ~100-500 samples for full integer quantization.
+OC: TFLite recommends a representative dataset to be around 100-500 samples for the representative dataset in full integer quantization. This is typically a small subset of the training or validation data. If the dataset is larger, it can be specified through the representative dataset function in the TensorFlow model, especially when using more than one signature.
+OD: TFLite recommends a representative dataset of around ~100-500 samples for full integer quantization.
+
+##### Q17 [number]
+QUESTION: In the TFLite tutorial, how much does dynamic range quantization shrink the ResNet v2 101 model?
+GOLD: From 171 MB to 43 MB, with the same top-1 accuracy of 76.8.
+
+--- RETRIEVED CONTEXT (what the model saw in condition R) ---
+[1] tflite__post_training_quant#008 | Post-training dynamic range quantization > Optimizing an existing model
+```python
+!ls -lh {tflite_models_dir}/*.tflite
+```
+
+The model size was reduced from 171 MB to 43 MB.
+The accuracy of this model on imagenet can be evaluated using the scripts provided for [TFLite accuracy measurement](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/lite/tools/evaluation/tasks/imagenet_image_classification).
+
+The optimized model top-1 accuracy is 76.8, the same as the floating point model.
+
+[2] tflite__post_training_quant#002 | Post-training dynamic range quantization > Overview
+Overview
+
+[TensorFlow Lite](https://www.tensorflow.org/lite/) now supports
+converting weights to 8-bit precision as part of model conversion from
+tensorflow graphdefs to TensorFlow Lite's flat buffer format. Dynamic range quantization achieves a 4x reduction in the model size. In addition, TFLite supports on-the-fly quantization and dequantization of activations to allow for:
+
+1.  Using quantized kernels for faster implementation when available.
+2.  Mixing of floating-point kernels with quantized kernels for different parts
+    of the graph.
+
+The activations are always stored in floating point. For ops that
+support quantized kernels, the activations are quantized to 8 bits of precision
+dynamically prior to processing and are de-quantized to float precision after
+processing. Depending on the model being converted, this can give a speedup over
+pure floating point computation.
+
+In contrast to
+[quantization aware training](https://github.com/tensorflow/tensorflow/tree/r1.14/tensorflow/contrib/quantize)
+, the weights are quantized post training and the activations are quantized dynamically 
+at inference in this method.
+Therefore, the model weights are not retrained to compensate for quantization
+induced errors. It is important to check the accuracy of the quantized model to
+ensure that the degradation is acceptable.
+
+This tutorial trains an MNIST model from scratch, checks its accuracy in
+TensorFlow, and then converts the model into a Tensorflow Lite flatbuffer
+with dynamic range quantization. Finally, it checks the
+accuracy of the converted model and compares it to the original float model.
+
+[3] tflite__post_training_quantization#001 | Post-training quantization > Dynamic range quantization
+Dynamic range quantization
+
+Dynamic range quantization is a recommended starting point because it provides
+reduced memory usage and faster computation without you having to provide a
+representative dataset for calibration. This type of quantization, statically
+quantizes only the weights from floating point to integer at conversion time,
+which provides 8-bits of precision:
+
+<pre>
+import tensorflow as tf
+converter = tf.lite.TFLiteConverter.from_saved_model(saved_model_dir)
+<b>converter.optimizations = [tf.lite.Optimize.DEFAULT]</b>
+tflite_quant_model = converter.convert()
+</pre>
+
+To further reduce latency during inference, "dynamic-range" operators
+dynamically quantize activations based on their range to 8-bits and perform
+computations with 8-bit weights and activations. This optimization provides
+latencies close to fully fixed-point inferences. However, the outputs are still
+stored using floating point so the increased speed of dynamic-range ops is less
+than a full fixed-point computation.
+
+[4] tflite__post_training_quant#007 | Post-training dynamic range quantization > Optimizing an existing model
+Optimizing an existing model
+
+Resnets with pre-activation layers (Resnet-v2) are widely used for vision applications.
+  Pre-trained frozen graph for resnet-v2-101 is available on
+  [Tensorflow Hub](https://tfhub.dev/google/imagenet/resnet_v2_101/classification/4).
+
+You can convert the frozen graph to a TensorFLow Lite flatbuffer with quantization by:
+
+```python
+import tensorflow_hub as hub
+
+resnet_v2_101 = tf.keras.Sequential([
+  keras.layers.InputLayer(input_shape=(224, 224, 3)),
+  hub.KerasLayer("https://tfhub.dev/google/imagenet/resnet_v2_101/classification/4")
+])
+
+converter = tf.lite.TFLiteConverter.from_keras_model(resnet_v2_101)
+```
+
+```python
+# Convert to TF Lite without quantization
+resnet_tflite_file = tflite_models_dir/"resnet_v2_101.tflite"
+resnet_tflite_file.write_bytes(converter.convert())
+```
+
+```python
+# Convert to TF Lite with quantization
+converter.optimizations = [tf.lite.Optimize.DEFAULT]
+resnet_quantized_tflite_file = tflite_models_dir/"resnet_v2_101_quantized.tflite"
+resnet_quantized_tflite_file.write_bytes(converter.convert())
+```
+
+--- ANSWERS, condition R ---
+RA: I cannot find this in the provided documents.
+RB: I cannot find this in the provided documents.
+RC: The tutorial for the ResNet v2 101 model with dynamic range quantization achieves a 4x reduction in model size, as mentioned in the context provided. There is no specific size reduction provided for the ResNet v2 101 model in the tutorial itself, only the general statement about dynamic range quantization supporting 4x reduction in model size.
+RD: I cannot find this in the provided documents.
+--- ORACLE CONTEXT (condition O) = ['tflite__post_training_quant#008']; already shown above ---
+--- ANSWERS, condition O ---
+OA: I cannot find this in the provided documents.
+OB: I cannot find this in the provided documents.
+OC: I cannot find this in the provided documents.
+OD: I cannot find this in the provided documents.
+
+##### Q18 [number]
+QUESTION: What CER does DeepSpeech 0.5.1 reach with float32, int8 and int16 activations in the TFLite int16 table?
+GOLD: 6.13% with float32 activations, 43.67% with int8 activations, and 6.52% with int16 activations.
+
+--- RETRIEVED CONTEXT (what the model saw in condition R) ---
+[1] tflite__model_optimization#007 | Model optimization > Types of optimization > Full integer quantization with int16 activations and int8 weights
+Full integer quantization with int16 activations and int8 weights
+
+[Quantization with int16 activations](https://www.tensorflow.org/model_optimization/guide/quantization/post_training)
+is a full integer quantization scheme with activations in int16 and weights in
+int8. This mode can improve accuracy of the quantized model in comparison to the
+full integer quantization scheme with both activations and weights in int8
+keeping a similar model size. It is recommended when activations are sensitive
+to the quantization.
+
+<i>NOTE:</i> Currently only non-optimized reference kernel implementations are
+available in TFLite for this quantization scheme, so by default the performance
+will be slow compared to int8 kernels. Full advantages of this mode can
+currently be accessed via specialised hardware, or custom software.
+
+[2] tflite__post_training_integer_quant_16x8#000 | Post-training integer quantization with int16 activations
+Post-training integer quantization with int16 activations
+
+<table class="tfo-notebook-buttons" align="left">
+  <td>
+    <a target="_blank" href="https://www.tensorflow.org/lite/performance/post_training_integer_quant_16x8"><img src="https://www.tensorflow.org/images/tf_logo_32px.png" />View on TensorFlow.org</a>
+  </td>
+  <td>
+    <a target="_blank" href="https://colab.research.google.com/github/tensorflow/tensorflow/blob/master/tensorflow/lite/g3doc/performance/post_training_integer_quant_16x8.ipynb"><img src="https://www.tensorflow.org/images/colab_logo_32px.png" />Run in Google Colab</a>
+  </td>
+  <td>
+    <a target="_blank" href="https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/g3doc/performance/post_training_integer_quant_16x8.ipynb"><img src="https://www.tensorflow.org/images/GitHub-Mark-32px.png" />View source on GitHub</a>
+  </td>
+  <td>
+
+[3] tflite__post_training_quantization#008 | Post-training quantization > Integer only: 16-bit activations with 8-bit weights (experimental)
+If 16x8 quantization is not supported for some operators in the model,
+then the model still can be quantized, but unsupported operators kept in float.
+The following option should be added to the target_spec to allow this.
+<pre>
+import tensorflow as tf
+converter = tf.lite.TFLiteConverter.from_saved_model(saved_model_dir)
+converter.representative_dataset = representative_dataset
+converter.optimizations = [tf.lite.Optimize.DEFAULT]
+converter.target_spec.supported_ops = [tf.lite.OpsSet.EXPERIMENTAL_TFLITE_BUILTINS_ACTIVATIONS_INT16_WEIGHTS_INT8,
+<b>tf.lite.OpsSet.TFLITE_BUILTINS</b>]
+tflite_quant_model = converter.convert()
+</pre>
+
+Examples of the use cases where accuracy improvements provided by this
+quantization scheme include:
+
+*   super-resolution,
+*   audio signal processing such as noise cancelling and beamforming,
+*   image de-noising,
+*   HDR reconstruction from a single image.
+
+The disadvantage of this quantization is:
+
+*   Currently inference is noticeably slower than 8-bit full integer due to the
+    lack of optimized kernel implementation.
+*   Currently it is incompatible with the existing hardware accelerated TFLite
+    delegates.
+
+Note: This is an experimental feature.
+
+A tutorial for this quantization mode can be found
+[here](post_training_integer_quant_16x8.ipynb).
+
+[4] tflite__post_training_integer_quant_16x8#002 | Post-training integer quantization with int16 activations > Overview
+Overview
+
+[TensorFlow Lite](https://www.tensorflow.org/lite/) now supports
+converting activations to 16-bit integer values and weights to 8-bit integer values during model conversion from TensorFlow to TensorFlow Lite's flat buffer format. We refer to this mode as the "16x8 quantization mode". This mode can improve accuracy of the quantized model significantly, when activations are sensitive to the quantization, while still achieving almost 3-4x reduction in model size. Moreover, this fully quantized model can be consumed by integer-only hardware accelerators.
+
+Some examples of models that benefit from this mode of the post-training quantization include: 
+* super-resolution, 
+* audio signal processing such
+as noise cancelling and beamforming, 
+* image de-noising, 
+* HDR reconstruction
+from a single image
+
+In this tutorial, you train an MNIST model from scratch, check its accuracy in TensorFlow, and then convert the model into a Tensorflow Lite flatbuffer using this mode. At the end you check the accuracy of the converted model and compare it to the original float32 model. Note that this example demonstrates the usage of this mode and doesn't show benefits over other available quantization techniques in TensorFlow Lite.
+
+Setup
+
+```python
+import logging
+logging.getLogger("tensorflow").setLevel(logging.DEBUG)
+
+import tensorflow as tf
+from tensorflow import keras
+import numpy as np
+import pathlib
+```
+
+Check that the 16x8 quantization mode is available
+
+```python
+tf.lite.OpsSet.EXPERIMENTAL_TFLITE_BUILTINS_ACTIVATIONS_INT16_WEIGHTS_INT8
+```
+
+--- ANSWERS, condition R ---
+RA: I cannot find this in the provided documents. The CER (Categorical Cross-Entropy) values for DeepSpeech 0.5.1 with float32, int8, and int16 activations in the TFLite int16 table are not specified in the provided context.
+RB: I cannot find this in the provided documents.
+RC: I cannot find this in the provided documents.
+RD: I cannot find this in the provided documents.
+--- ORACLE CONTEXT (condition O) = ['tflite__model_optimization#008']; extra chunks below ---
+tflite__model_optimization#008 | Model optimization > Types of optimization > Full integer quantization with int16 activations and int8 weights
+Below are the accuracy results for some models that benefit from this mode.
+<figure>
+  <table>
+    <tr>
+      <th>Model</th>
+      <th>Accuracy metric type </th>
+      <th>Accuracy (float32 activations) </th>
+      <th>Accuracy (int8 activations) </th>
+      <th>Accuracy (int16 activations) </th>
+    </tr> <tr><td>Wav2letter</td><td>WER</td><td>6.7%</td><td>7.7%</td>
+      <td>7.2%</td></tr>
+    <tr><td>DeepSpeech 0.5.1 (unrolled)</td><td>CER</td><td>6.13%</td><td>43.67%</td>
+      <td>6.52%</td></tr>
+    <tr><td>YoloV3</td><td>mAP(IOU=0.5)</td><td>0.577</td><td>0.563</td>
+      <td>0.574</td></tr>
+    <tr><td>MobileNetV1</td><td>Top-1 Accuracy</td><td>0.7062</td><td>0.694</td>
+      <td>0.6936</td></tr>
+
+--- ANSWERS, condition O ---
+OA: The CER for DeepSpeech 0.5.1 (unrolled) with float32 activations is 6.13% with int8 activations it is 43.67%, and with int16 activations it is 6.52%. Therefore, the CER for DeepSpeech 0.5.1 with int16 activations is 6.52%.
+OB: The CER (Character Error Rate) for DeepSpeech 0.5.1 with int8 activations is 43.67%. For int16 activations, it is 6.52%. The table does not provide a float32 activation CER for DeepSpeech 0.5.1.
+OC: DeepSpeech 0.5.1 (unrolled) reaches a CER of 6.13% with float32 activations, 43.67% with int8 activations, and 6.52% with int16 activations according to the provided table.
+OD: DeepSpeech 0.5.1 (unrolled) reaches a CER of 6.13% with float32 activations, 43.67% with int8 activations, and 6.52% with int16 activations according to the provided table.
+
+##### Q19 [number]
+QUESTION: What are the top-1 accuracies of MobileNet-v2-1-224 originally, after post-training quantization, and after quantization-aware training?
+GOLD: 0.719 originally, 0.637 after post-training quantization, and 0.709 after quantization-aware training.
+
+--- RETRIEVED CONTEXT (what the model saw in condition R) ---
+[1] tflite__model_optimization#005 | Model optimization > Types of optimization > Quantization
+Below are the latency and accuracy results for post-training quantization and
+quantization-aware training on a few models. All latency numbers are measured on
+Pixel 2 devices using a single big core CPU. As the toolkit improves, so will
+the numbers here:
+
+<figure>
+  <table>
+    <tr>
+      <th>Model</th>
+      <th>Top-1 Accuracy (Original) </th>
+      <th>Top-1 Accuracy (Post Training Quantized) </th>
+      <th>Top-1 Accuracy (Quantization Aware Training) </th>
+      <th>Latency (Original) (ms) </th>
+      <th>Latency (Post Training Quantized) (ms) </th>
+      <th>Latency (Quantization Aware Training) (ms) </th>
+      <th> Size (Original) (MB)</th>
+      <th> Size (Optimized) (MB)</th>
+    </tr> <tr><td>Mobilenet-v1-1-224</td><td>0.709</td><td>0.657</td><td>0.70</td>
+      <td>124</td><td>112</td><td>64</td><td>16.9</td><td>4.3</td></tr>
+    <tr><td>Mobilenet-v2-1-224</td><td>0.719</td><td>0.637</td><td>0.709</td>
+      <td>89</td><td>98</td><td>54</td><td>14</td><td>3.6</td></tr>
+
+[2] pytorch__qat#020 | Quantization-Aware Training (QAT) > Evaluation Results
+| mmlu-pro    |          0.2771 |          0.2562 |     0.2629 | 32.057%     |
++-------------+-----------------+-----------------+------------+-------------+
+```
+
+NVFP4 QAT full fine-tuning, fine-tuned using Axolotl on 8x B200 GPUs on the
+[yahma/alpaca-cleaned](https://huggingface.co/datasets/yahma/alpaca-cleaned)
+dataset. Learning rate was 2e-5 and batch size was 128 for `gemma3-12b-it`
+and 32 for `Qwen3-8B`.
+
+[3] pytorch__qat#018 | Quantization-Aware Training (QAT) > Evaluation Results
++=============+=================+=================+============+=============+
+| mmlu-pro    |          0.4909 |          0.4328 |     0.4524 | 33.735%     |
++-------------+-----------------+-----------------+------------+-------------+
+
+# Llama3.2-3B
++-------------+-----------------+-----------------+------------+-------------+
+| Eval task   |   bf16 baseline |   int4 baseline |   int4 QAT | recovered   |
++=============+=================+=================+============+=============+
+
+[4] pytorch__qat#022 | Quantization-Aware Training (QAT) > Evaluation Results
++-------------+-----------------+------------------+-------------+-------------+
+
+# Qwen3-8B
++-------------+-----------------+------------------+-------------+-------------+
+| Eval task   |   bf16 baseline |   nvfp4 baseline |   nvfp4 QAT | recovered   |
++=============+=================+==================+=============+=============+
+| bbh         |          0.7771 |           0.7262 |      0.7397 | 26.523%     |
+
+--- ANSWERS, condition R ---
+RA: For MobileNet-v2-1-224:
+- Originally: 0.719
+- After post-training quantization: 0.637
+- After quantization-aware training: 0.709
+RB: The top-1 accuracy of MobileNet-v2-1-224 originally is 0.719. After post-training quantization, it drops to 0.637. After quantization-aware training, the accuracy is 0.709.
+RC: The top-1 accuracies for MobileNet-v2-1-224 are as follows:
+
+- Original: 0.719
+- Post Training Quantization: 0.637
+- Quantization Aware Training: 0.709
+
+These values are derived from the provided table in the context.
+RD: The top-1 accuracy of MobileNet-v2-1-224 originally is 0.719. After post-training quantization, it drops to 0.637. After quantization-aware training, the accuracy is 0.709.
+--- ORACLE CONTEXT (condition O) = ['tflite__model_optimization#005']; already shown above ---
+--- ANSWERS, condition O ---
+OA: The top-1 accuracies for MobileNet-v2-1-224 are as follows: originally 0.719, after post-training quantization 0.637, and after quantization-aware training 0.709. These values are directly provided in the table for the MobileNet-v2-1-224 model.
+OB: The top-1 accuracy of MobileNet-v2-1-224 originally is 0.719. After post-training quantization, it drops to 0.637. Following quantization-aware training, the accuracy improves to 0.709.
+OC: For MobileNet-v2-1-224, the top-1 accuracy originally is 0.719. After post-training quantization, it drops to 0.637. And after quantization-aware training, the accuracy is 0.709.
+OD: The top-1 accuracy of MobileNet-v2-1-224 originally is 0.719. After post-training quantization, it drops to 0.637. Following quantization-aware training, the accuracy improves to 0.709.
+
+##### Q20 [number]
+QUESTION: What F1 does MobileBert get with float32 activations versus int8 activations in the TFLite int16 table?
+GOLD: F1 88.81 with float32 activations and 2.08 with int8 activations (88.73 with int16 activations).
+
+--- RETRIEVED CONTEXT (what the model saw in condition R) ---
+[1] tflite__model_optimization#009 | Model optimization > Types of optimization > Full integer quantization with int16 activations and int8 weights
+    <tr><td>MobileNetV2</td><td>Top-1 Accuracy</td><td>0.718</td><td>0.7126</td>
+      <td>0.7137</td></tr>
+    <tr><td>MobileBert</td><td>F1(Exact match)</td><td>88.81(81.23)</td><td>2.08(0)</td>
+      <td>88.73(81.15)</td></tr>
+ </table>
+  <figcaption>
+    <b>Table 2</b> Benefits of model quantization with int16 activations
+  </figcaption>
+</figure>
+
+[2] tflite__model_optimization#007 | Model optimization > Types of optimization > Full integer quantization with int16 activations and int8 weights
+Full integer quantization with int16 activations and int8 weights
+
+[Quantization with int16 activations](https://www.tensorflow.org/model_optimization/guide/quantization/post_training)
+is a full integer quantization scheme with activations in int16 and weights in
+int8. This mode can improve accuracy of the quantized model in comparison to the
+full integer quantization scheme with both activations and weights in int8
+keeping a similar model size. It is recommended when activations are sensitive
+to the quantization.
+
+<i>NOTE:</i> Currently only non-optimized reference kernel implementations are
+available in TFLite for this quantization scheme, so by default the performance
+will be slow compared to int8 kernels. Full advantages of this mode can
+currently be accessed via specialised hardware, or custom software.
+
+[3] tflite__model_optimization#008 | Model optimization > Types of optimization > Full integer quantization with int16 activations and int8 weights
+Below are the accuracy results for some models that benefit from this mode.
+<figure>
+  <table>
+    <tr>
+      <th>Model</th>
+      <th>Accuracy metric type </th>
+      <th>Accuracy (float32 activations) </th>
+      <th>Accuracy (int8 activations) </th>
+      <th>Accuracy (int16 activations) </th>
+    </tr> <tr><td>Wav2letter</td><td>WER</td><td>6.7%</td><td>7.7%</td>
+      <td>7.2%</td></tr>
+    <tr><td>DeepSpeech 0.5.1 (unrolled)</td><td>CER</td><td>6.13%</td><td>43.67%</td>
+      <td>6.52%</td></tr>
+    <tr><td>YoloV3</td><td>mAP(IOU=0.5)</td><td>0.577</td><td>0.563</td>
+      <td>0.574</td></tr>
+    <tr><td>MobileNetV1</td><td>Top-1 Accuracy</td><td>0.7062</td><td>0.694</td>
+      <td>0.6936</td></tr>
+
+[4] tflite__post_training_integer_quant_16x8#000 | Post-training integer quantization with int16 activations
+Post-training integer quantization with int16 activations
+
+<table class="tfo-notebook-buttons" align="left">
+  <td>
+    <a target="_blank" href="https://www.tensorflow.org/lite/performance/post_training_integer_quant_16x8"><img src="https://www.tensorflow.org/images/tf_logo_32px.png" />View on TensorFlow.org</a>
+  </td>
+  <td>
+    <a target="_blank" href="https://colab.research.google.com/github/tensorflow/tensorflow/blob/master/tensorflow/lite/g3doc/performance/post_training_integer_quant_16x8.ipynb"><img src="https://www.tensorflow.org/images/colab_logo_32px.png" />Run in Google Colab</a>
+  </td>
+  <td>
+    <a target="_blank" href="https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/g3doc/performance/post_training_integer_quant_16x8.ipynb"><img src="https://www.tensorflow.org/images/GitHub-Mark-32px.png" />View source on GitHub</a>
+  </td>
+  <td>
+
+--- ANSWERS, condition R ---
+RA: The F1 score for MobileBert with float32 activations is 88.81, and with int8 activations it is 88.73.
+RB: The table provided does not contain the specific F1 (Exact match) F1(Exact match) accuracy values for MobileBert with float32 activations versus int8 activations in the TFLite int16 table. The provided data only includes the F1 accuracy for MobileBert with int8 activations, not the comparison with float32 activations. Therefore, I cannot find this information in the provided documents.
+RC: The F1 score for MobileBert with float32 activations is 88.81, and with int8 activations it is 88.73.
+RD: The F1 score for MobileBert with float32 activations is 88.81, and with int8 activations it is 88.73.
+--- ORACLE CONTEXT (condition O) = ['tflite__model_optimization#009']; already shown above ---
+--- ANSWERS, condition O ---
+OA: I cannot find this in the provided documents.
+OB: The provided context does not contain the required information to answer the question. The table for MobileBert with F1 (Exact match) scores and F1 scores with float32 activations versus int8 activations is not included in the given context. Therefore, I cannot find this information in the provided documents.
+OC: I cannot find this in the provided documents.
+OD: I cannot find this in the provided documents.

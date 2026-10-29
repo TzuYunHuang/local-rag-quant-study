@@ -1,0 +1,11 @@
+.DS_Store
+__pycache__/
+*.pyc
+.venv/
+# large or re-downloadable
+corpus_raw/
+old_v1/
+ppl/wikitext-2-raw/
+ppl/wikitext-2-raw-v1.zip
+# model files (download separately)
+*.gguf

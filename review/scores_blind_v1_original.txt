@@ -1,0 +1,296 @@
+Q01 RA 0 0 拒答且聲稱上下文沒有公式（上下文有）
+Q01 RB 2 1 公式正確
+Q01 RC 2 1 公式正確
+Q01 RD 0 0 拒答且聲稱上下文沒有公式（上下文有）
+Q01 OA 0 1 拒答（gold 在上下文）
+Q01 OB 2 1 公式正確，後半句「inverse 未提供」略混亂
+Q01 OC 0 1 拒答（gold 在上下文）
+Q01 OD 0 1 拒答（gold 在上下文）
+Q02 RA 2 1 零填充與準確度誤差都有
+Q02 RB 1 1 缺 zero padding 原因
+Q02 RC 1 1 缺 zero padding 原因
+Q02 RD 2 1 完整
+Q02 OA 2 1 完整，結尾稍冗
+Q02 OB 2 1 完整
+Q02 OC 2 1 完整
+Q02 OD 2 1 完整
+Q03 RA 1 1 方法對、4x 與 2-3x 有據；缺「不需代表性資料集」（上下文沒有）
+Q03 RB 1 1 同上
+Q03 RC 1 1 同上
+Q03 RD 1 1 同上
+Q03 OA 2 1 完整
+Q03 OB 2 1 完整
+Q03 OC 1 1 缺「不需代表性資料集」
+Q03 OD 2 1 完整
+Q04 RA 2 1 變數張量需推論校準、估範圍；「single set of values」措辭略偏
+Q04 RB 2 1 同 RA
+Q04 RC 1 0 首句「cannot be calibrated with the provided dataset」與原文相反；缺推論說明
+Q04 RD 2 1 完整
+Q04 OA 2 1 完整
+Q04 OB 2 1 完整
+Q04 OC 1 1 核心有但缺「需實際推論」，句子混亂
+Q04 OD 2 1 完整
+Q05 RA 1 0 核心對，但「該項只算一次」與原文相反（原文是消除該項）
+Q05 RB 2 1 完整
+Q05 RC 2 1 完整
+Q05 RD 2 1 完整
+Q05 OA 2 1 完整
+Q05 OB 2 1 完整
+Q05 OC 1 0 核心對，但把「zero-point 便宜、多一位精度」（是 activation 的描述）安到權重上
+Q05 OD 2 1 完整
+Q06 RA 1 1 說是暫時量化到低精度，未明講「取整但不轉型別」；有提到仍以 float32 運算
+Q06 RB 0 0 只描述 API 流程，沒定義 fake quantization；把 PTQ 誤寫成 PyTorch Quantization
+Q06 RC 1 1 同 RA
+Q06 RD 1 1 有 fake quantizer 與 float32 運算，缺「取整不轉型別」
+Q06 OA 2 1 完整
+Q06 OB 1 1 有「模擬量化／反量化」，缺「取整但不轉型別」（邊界）
+Q06 OC 2 1 完整
+Q06 OD 2 1 完整
+Q07 RA 1 1 convert 對；prepare 只說設定模型，缺「在 linear 層插入 fake quantize」
+Q07 RB 2 1 prepare 與 convert 都對；結尾離題但有據
+Q07 RC 1 1 prepare 太籠統
+Q07 RD 1 1 prepare 太籠統
+Q07 OA 2 1 完整
+Q07 OB 2 1 完整，fused 說法略偏
+Q07 OC 2 1 完整
+Q07 OD 2 1 完整
+Q08 RA 0 0 答成單一 quantizer 實例，與問題無關，上下文無此資訊
+Q08 RB 0 1 拒答（前 4 塊確實沒有答案）
+Q08 RC 0 0 答成 PT2E 流程
+Q08 RD 0 0 答成 PT2E 流程
+Q08 OA 2 1 torchao
+Q08 OB 2 1 torchao
+Q08 OC 2 1 torchao
+Q08 OD 2 1 torchao
+Q09 RA 2 1 PTQ 不重訓、QAT 訓練中 fake quantization 且較準
+Q09 RB 2 0 對比正確；「更複雜耗時」上下文沒有
+Q09 RC 2 1 對比正確
+Q09 RD 2 1 對比正確
+Q09 OA 1 0 把 PTQ 說成量化後再用量化權重訓練，QAT 敘述自相矛盾；有提小網路準度損失
+Q09 OB 1 0 把「取整不轉型別」安到 PTQ 上（上下文說 PTQ 會轉型別）；QAT 部分對
+Q09 OC 2 1 完整
+Q09 OD 2 1 完整
+Q10 RA 2 1 完整
+Q10 RB 2 1 完整
+Q10 RC 2 1 完整
+Q10 RD 1 0 說 static 較準，前後矛盾
+Q10 OA 2 1 完整
+Q10 OB 2 1 完整
+Q10 OC 1 0 說 dynamic 在「量化過程」算參數，應為推論時
+Q10 OD 1 0 同 OC
+Q11 RA 2 0 核心對；但「QDQ 較靈活、QOperator 較直接用於 static」上下文沒有
+Q11 RB 2 1 完整
+Q11 RC 2 1 完整
+Q11 RD 2 1 完整
+Q11 OA 2 0 核心對；後半「QDQ 較靈活」等說法上下文沒有，且句子混亂
+Q11 OB 2 1 完整
+Q11 OC 2 1 完整
+Q11 OD 2 1 完整
+Q12 RA 1 0 DR 4x、FP16 半大小對；稱 full integer「需重訓」且速度比較皆無據
+Q12 RB 1 0 DR 與 FP16 有據；full integer 敘述（精度損失、硬體少見）無據
+Q12 RC 1 1 只答 DR 的 4x，沒比較其他兩種（自己說要看情況）
+Q12 RD 1 0 DR 與 FP16 有據；full integer 「再縮小」無據（自稱 context 沒有）
+Q12 OA 0 0 全部混亂錯誤（如「FI 比 FP16 大 4 倍」）
+Q12 OB 1 0 三種數字都對，但多編「FP16 2x-3x GPU speedup」
+Q12 OC 2 1 數字與硬體大致對（略缺 microcontrollers 與 FP16 的 CPU）
+Q12 OD 2 1 同 OC
+Q13 RA 1 0 只講都轉 float16 與 ORT 工具；「TFLite 客製較少」無據；漏細節
+Q13 RB 0 1 拒答（上下文足以回答大部分）
+Q13 RC 1 0 同 RA
+Q13 RD 1 0 TFLite 半大小、ORT 半大小＋GPU＋精度損失有；「TFLite 效能不一定提升」為臆測
+Q13 OA 0 1 拒答（上下文有 TFLite 與 ORT float16 的主要資訊）
+Q13 OB 0 1 拒答
+Q13 OC 0 1 拒答（說沒有直接比較）
+Q13 OD 0 1 拒答
+Q14 RA 2 0 四項取捨皆有；首項「int8 略增大小」敘述混亂
+Q14 RB 2 0 同 RA
+Q14 RC 1 1 有準度、大小、慢；缺與硬體加速 delegate 不相容
+Q14 RD 1 0 稱 16x8 準度不如 int8（錯）；缺不相容
+Q14 OA 1 1 有慢與不相容；缺準度提升與大小
+Q14 OB 2 0 四項皆有，被截斷；多編「對即時應用特別有問題」。被 256 tokens 截斷
+Q14 OC 1 1 同 OA
+Q14 OD 1 1 同 OA
+Q15 RA 1 1 4x 對；坦承沒給加速倍數
+Q15 RB 1 1 同 RA
+Q15 RC 1 1 4x 對；無加速倍數
+Q15 RD 1 0 4x 對；「4x speedup」是編的
+Q15 OA 2 1 完整
+Q15 OB 1 0 加速寫成 2x（應為 2x-3x）
+Q15 OC 2 1 完整
+Q15 OD 2 1 完整
+Q16 RA 2 1 約 100-500
+Q16 RB 2 1 100-500，小子集
+Q16 RC 2 1 100-500
+Q16 RD 2 1 100-500
+Q16 OA 2 1 100-500
+Q16 OB 2 1 100-500
+Q16 OC 2 1 100-500；後半「若資料集更大」說法無據
+Q16 OD 2 1 100-500
+Q17 RA 0 1 拒答（答案在上下文）
+Q17 RB 0 1 拒答（答案在上下文）
+Q17 RC 0 0 說教程沒給 ResNet 縮小數字（上下文有 171→43 MB），只答 4x
+Q17 RD 0 1 拒答（答案在上下文）
+Q17 OA 0 1 拒答（gold 在上下文）
+Q17 OB 0 1 拒答（gold 在上下文）
+Q17 OC 0 1 拒答（gold 在上下文）
+Q17 OD 0 1 拒答（gold 在上下文）
+Q18 RA 0 0 拒答，但編造 CER＝Categorical Cross-Entropy
+Q18 RB 0 1 拒答（前 4 塊沒有表格，拒答合理）
+Q18 RC 0 1 拒答（前 4 塊沒有表格，拒答合理）
+Q18 RD 0 1 拒答（前 4 塊沒有表格，拒答合理）
+Q18 OA 2 1 三個數字都對，結尾重複
+Q18 OB 1 0 int8、int16 對；說表格沒有 float32（有 6.13%）
+Q18 OC 2 1 三個數字都對
+Q18 OD 2 1 三個數字都對
+Q19 RA 2 1 三個數字都對
+Q19 RB 2 1 三個數字都對
+Q19 RC 2 1 三個數字都對
+Q19 RD 2 1 三個數字都對
+Q19 OA 2 1 三個數字都對
+Q19 OB 2 1 三個數字都對
+Q19 OC 2 1 三個數字都對
+Q19 OD 2 1 三個數字都對
+Q20 RA 1 0 float32 88.81 對；int8 寫成 88.73（那是 int16，int8 為 2.08）
+Q20 RB 0 0 拒答，且聲稱上下文沒有 float32 數字（有）
+Q20 RC 1 0 同 RA
+Q20 RD 1 0 同 RA
+Q20 OA 0 1 拒答（gold 在上下文）
+Q20 OB 0 0 拒答，且聲稱上下文沒有表格（有）
+Q20 OC 0 1 拒答（gold 在上下文）
+Q20 OD 0 1 拒答（gold 在上下文）
+Q21 RA 2 1 覆蓋率、可程式化、簡化 UX 都有（缺 88% 數字）
+Q21 RB 2 1 同 RA
+Q21 RC 2 1 三點都有
+Q21 RD 2 1 三點都有，但先講 Quantizer 彈性，敘述偏離
+Q21 OA 2 1 三點加 88%／14K
+Q21 OB 2 0 三點對；多編「教程提到可匯出構造顯著更多」
+Q21 OC 2 1 三點加 88%
+Q21 OD 2 1 三點加 88%
+Q22 RA 0 0 答 TensorFlow 1.15（取自 TFLite 塊，與 PT2E 無關）
+Q22 RB 0 0 同 RA
+Q22 RC 0 0 同 RA
+Q22 RD 0 0 同 RA
+Q22 OA 2 1 torch.export.export
+Q22 OB 2 1 torch.export.export 加 Export DB
+Q22 OC 2 1 torch.export.export
+Q22 OD 2 1 torch.export.export
+Q23 RA 2 1 完整
+Q23 RB 2 1 完整
+Q23 RC 2 1 完整
+Q23 RD 1 1 原因對，但沒寫出 move_exported_model_to_eval/train 函式名
+Q23 OA 2 1 完整
+Q23 OB 2 1 完整
+Q23 OC 2 1 完整
+Q23 OD 2 1 完整
+Q24 RA 2 1 三個 op 對
+Q24 RB 2 1 三個 op 對
+Q24 RC 2 1 三個 op 對，說明較簡
+Q24 RD 2 1 三個 op 對
+Q24 OA 2 1 三個 op 對
+Q24 OB 2 1 三個 op 對
+Q24 OC 2 1 三個 op 對
+Q24 OD 2 1 三個 op 對
+Q25 RA 2 1 完整
+Q25 RB 2 1 完整
+Q25 RC 2 1 完整
+Q25 RD 2 1 完整
+Q25 OA 2 1 完整
+Q25 OB 2 1 完整
+Q25 OC 2 1 完整
+Q25 OD 2 1 完整
+Q26 RA 1 1 只說難以除錯；缺「圖被大幅改動、難以對齊張量」
+Q26 RB 2 1 完整
+Q26 RC 2 1 完整
+Q26 RD 2 0 核心對；多了「確保最佳形狀推論」無據
+Q26 OA 1 1 只說難以除錯（並提歷史預設），缺圖被改動的原因
+Q26 OB 1 1 只說簡化除錯，缺圖被改動的原因
+Q26 OC 1 1 只說難以除錯，缺圖被改動的原因
+Q26 OD 1 1 同 OA
+Q27 RA 1 0 把限制寫反（說「只能輸出大於 2GB」）；「大模型要跳過」對
+Q27 RB 2 1 完整
+Q27 RC 2 1 完整
+Q27 RD 2 1 完整
+Q27 OA 2 1 完整
+Q27 OB 2 1 完整
+Q27 OC 2 1 完整
+Q27 OD 2 1 完整
+Q28 RA 2 1 完整
+Q28 RB 2 0 三級與預設都對，但中段自相矛盾（說「只有 Basic 預設開」）
+Q28 RC 2 1 完整
+Q28 RD 2 1 完整
+Q28 OA 2 1 完整
+Q28 OB 2 1 完整
+Q28 OC 2 1 完整
+Q28 OD 2 1 完整
+Q29 RA 1 0 只講 PTQ 後處理、QAT 訓練中；缺 API 流程；「效能更好」無據
+Q29 RB 1 0 概念差異對；「QAT 模型更小」錯
+Q29 RC 0 1 拒答（上下文有 QAT 流程）
+Q29 RD 0 0 混亂：把 QAT 說成 post-training、混入 TFLite 內容；被截斷
+Q29 OA 1 0 概念差異對；稱 PTQ 沒有全域 quantizer（兩者皆有）；缺 prepare_qat_pt2e 等
+Q29 OB 1 1 只說準備階段不同，沒有 API 名稱
+Q29 OC 1 1 同 OB
+Q29 OD 1 0 稱 PTQ 沒有 custom quantizer（錯）
+Q30 RA 0 0 答 PT2E 匯出流程，非遷移指示
+Q30 RB 0 0 同 RA
+Q30 RC 0 0 同 RA
+Q30 RD 0 0 同 RA
+Q30 OA 2 1 完整
+Q30 OB 2 1 完整
+Q30 OC 1 0 eager 對；FX 部分把 prepare_pt2e／convert_pt2e 寫成 quantize_pt2e 函式
+Q30 OD 2 1 完整
+Q31 RA 2 1 fallback 可用 float 運算、integer-only 全整數且相容整數裝置；未提輸入輸出仍為 float
+Q31 RB 1 0 提到 fallback 輸入輸出仍為 float；但說 integer-only 的輸入輸出設為 float16，錯
+Q31 RC 2 1 fallback 與 integer-only（不含 float 輸入輸出）對比正確
+Q31 RD 2 0 對比正確；但稱 integer-only「與某些硬體加速器不相容」無據
+Q31 OA 2 1 完整
+Q31 OB 2 1 完整（「更廣泛相容」為推論）
+Q31 OC 2 1 完整
+Q31 OD 2 1 完整
+Q32 RA 0 1 拒答（部分資料有，但沒有整張表）
+Q32 RB 0 1 拒答（部分資料有，但沒有整張表）
+Q32 RC 0 0 答非所問（講量化精度與重訓，沒回答資料需求），且把 16x8 當成 integer
+Q32 RD 0 0 混亂錯誤，被截斷
+Q32 OA 2 1 四種資料需求完整
+Q32 OB 2 1 四種資料需求完整
+Q32 OC 1 0 說 integer 量化不需資料（應為未標註代表性樣本）
+Q32 OD 2 1 四種資料需求完整
+Q33 RA 2 1 per-tensor 與 per-axis 定義對（未提輸出通道、準度）
+Q33 RB 2 1 同 RA
+Q33 RC 2 1 定義對，並提更細粒度
+Q33 RD 2 1 同 RA
+Q33 OA 2 1 定義對，並提準度
+Q33 OB 2 1 定義對，並提準度
+Q33 OC 2 1 定義對，並提準度
+Q33 OD 2 1 定義對
+Q34 RA 1 0 兩種定義對；但稱 weight-only 使「activation 較不準」（activation 本來不量化）
+Q34 RB 2 0 定義對；「weight-only 犧牲準度換速度」與原文相反
+Q34 RC 2 0 同 RB
+Q34 RD 2 1 完整
+Q34 OA 2 1 完整
+Q34 OB 1 1 weight-only 對；dynamic 只說 weight 被量化，漏輸入也量化
+Q34 OC 2 1 完整
+Q34 OD 1 0 稱 weight-only 也改 activation，錯
+Q35 RA 2 1 正確拒答
+Q35 RB 0 0 幻覺：把 ExecuTorch iOS .pte 說明當成 llama.cpp 執行方式
+Q35 RC 2 1 正確拒答
+Q35 RD 2 1 正確拒答
+Q36 RA 2 1 正確拒答
+Q36 RB 2 1 改寫式正確拒答
+Q36 RC 2 1 正確拒答
+Q36 RD 2 1 正確拒答
+Q37 RA 1 0 拒答，但編造 AWQ＝Weight Quantization
+Q37 RB 2 1 正確拒答
+Q37 RC 2 1 正確拒答
+Q37 RD 2 1 正確拒答
+Q38 RA 2 1 正確拒答
+Q38 RB 2 1 正確拒答
+Q38 RC 2 1 正確拒答
+Q38 RD 0 0 幻覺：把 torchao 玩具模型 1.03x 說成 Apple Neural Engine 的加速
+Q39 RA 2 1 正確拒答
+Q39 RB 1 0 拒答，但編造 int8＝(intelligent) quantization
+Q39 RC 2 1 正確拒答
+Q39 RD 2 1 正確拒答
+Q40 RA 1 0 拒答，但編造 GPTQ＝Generalized Partitioned Quantization
+Q40 RB 2 1 正確拒答
+Q40 RC 2 1 正確拒答
+Q40 RD 2 1 正確拒答

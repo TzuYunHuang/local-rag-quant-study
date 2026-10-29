@@ -1,0 +1,566 @@
+##### Q01 [fact]
+QUESTION: What formula does ONNX Runtime use to map a quantized value back to a floating point value?
+GOLD: val_fp32 = scale * (val_quantized - zero_point).
+
+--- RETRIEVED CONTEXT (what the model saw in condition R) ---
+[1] ort__quantization#003 | Quantize ONNX models > Quantizing an ONNX model
+Quantizing an ONNX model
+
+ONNX Runtime provides python APIs for converting 32-bit floating point model to an 8-bit integer
+model, a.k.a. quantization. These APIs include pre-processing, dynamic/static quantization, and
+debugging.
+
+[2] ort__quantization#000 | Quantize ONNX models > Quantization Overview
+Quantization Overview
+
+Quantization in ONNX Runtime refers to 8 bit linear quantization of an ONNX model.
+
+During quantization, the floating point values are mapped to an 8 bit quantization space of the form:
+ `val_fp32 = scale * (val_quantized - zero_point)`
+
+`scale` is a positive real number used to map the floating point numbers to a quantization space. It is calculated as follows:
+
+For asymmetric quantization:
+ ```
+ scale = (data_range_max - data_range_min) / (quantization_range_max - quantization_range_min)
+ ```
+
+For symmetric quantization:
+ ```
+ scale = max(abs(data_range_max), abs(data_range_min)) * 2 / (quantization_range_max - quantization_range_min)
+ ```
+
+`zero_point` represents zero in the quantization space. It is important that the floating point zero value be exactly representable in quantization space. This is because zero padding is used in many CNNs. If it is not possible to represent 0 uniquely after quantization, it will result in accuracy errors.
+
+[3] ort__quantization#008 | Quantize ONNX models > Quantizing an ONNX model > <a name="qdqdebug"></a>Quantization Debugging
+In summary, ONNX Runtimes provides Python APIs for matching up corresponding weights and activation
+tensors between a float32 model and its quantized counterpart. This allows the user to easily
+compare them to locate where are the biggest differences.
+
+Model optimization during quantization creates difficulties for this debugging process though,
+since it may changes the computation graph in a significant way, resulting in a quantized model
+that is drastically different from the original. This makes it hard to match up corresponding
+tensors from the two models. As a result, we recommend performing model optimization during
+pre-processing instead of the quantization process.
+
+[4] ort__quantization#010 | Quantize ONNX models > Quantizing an ONNX model > Data type selection
+Data type selection
+
+The quantized values are 8 bits wide and can be either signed (int8) or unsigned (uint8). We can choose the signedness of the activations and the weights separately, so the data format can be (activations: uint8, weights: uint8), (activations: uint8, weights: int8), etc.
+Let's use U8U8 as a shorthand for (activations: uint8, weights: uint8), U8S8 for (activations: uint8, weights: int8), and similarly S8U8 and S8S8 for the remaining two formats.
+
+ONNX Runtime quantization on CPU can run U8U8, U8S8 and S8S8. S8S8 with QDQ is the default setting and balances performance and accuracy. It should be the first choice. Only in cases that the accuracy drops a lot, you can try U8U8. Note that S8S8 with QOperator will be slow on x86-64 CPUs and should be avoided in general.
+ONNX Runtime quantization on GPU only supports S8S8.
+
+--- ANSWERS, condition R ---
+RA: ONNX Runtime uses the formula `val_fp32 = scale * (val_quantized - zero_point)` to map a quantized value back to a floating point value.
+RB: ONNX Runtime does not provide a direct formula to map a quantized value back to a floating point value. The provided context focuses on the process of quantizing from floating point to integer and does not detail the reverse process. I cannot find this in the provided documents.
+--- ORACLE CONTEXT (condition O) = ['ort__quantization#000']; already shown above ---
+--- ANSWERS, condition O ---
+OA: I cannot find this in the provided documents.
+OB: ONNX Runtime uses the formula `val_fp32 = scale * (val_quantized - zero_point)` to map a quantized value back to a floating point value. This formula is derived from the quantization process where floating point values are mapped to an 8-bit quantization space.
+
+##### Q02 [fact]
+QUESTION: In ONNX Runtime quantization, why must the floating point zero be exactly representable in the quantization space?
+GOLD: Because zero padding is used in many CNNs. If 0 cannot be represented uniquely after quantization, it causes accuracy errors.
+
+--- RETRIEVED CONTEXT (what the model saw in condition R) ---
+[1] ort__quantization#000 | Quantize ONNX models > Quantization Overview
+Quantization Overview
+
+Quantization in ONNX Runtime refers to 8 bit linear quantization of an ONNX model.
+
+During quantization, the floating point values are mapped to an 8 bit quantization space of the form:
+ `val_fp32 = scale * (val_quantized - zero_point)`
+
+`scale` is a positive real number used to map the floating point numbers to a quantization space. It is calculated as follows:
+
+For asymmetric quantization:
+ ```
+ scale = (data_range_max - data_range_min) / (quantization_range_max - quantization_range_min)
+ ```
+
+For symmetric quantization:
+ ```
+ scale = max(abs(data_range_max), abs(data_range_min)) * 2 / (quantization_range_max - quantization_range_min)
+ ```
+
+`zero_point` represents zero in the quantization space. It is important that the floating point zero value be exactly representable in quantization space. This is because zero padding is used in many CNNs. If it is not possible to represent 0 uniquely after quantization, it will result in accuracy errors.
+
+[2] ort__quantization#003 | Quantize ONNX models > Quantizing an ONNX model
+Quantizing an ONNX model
+
+ONNX Runtime provides python APIs for converting 32-bit floating point model to an 8-bit integer
+model, a.k.a. quantization. These APIs include pre-processing, dynamic/static quantization, and
+debugging.
+
+[3] ort__quantization#010 | Quantize ONNX models > Quantizing an ONNX model > Data type selection
+Data type selection
+
+The quantized values are 8 bits wide and can be either signed (int8) or unsigned (uint8). We can choose the signedness of the activations and the weights separately, so the data format can be (activations: uint8, weights: uint8), (activations: uint8, weights: int8), etc.
+Let's use U8U8 as a shorthand for (activations: uint8, weights: uint8), U8S8 for (activations: uint8, weights: int8), and similarly S8U8 and S8S8 for the remaining two formats.
+
+ONNX Runtime quantization on CPU can run U8U8, U8S8 and S8S8. S8S8 with QDQ is the default setting and balances performance and accuracy. It should be the first choice. Only in cases that the accuracy drops a lot, you can try U8U8. Note that S8S8 with QOperator will be slow on x86-64 CPUs and should be avoided in general.
+ONNX Runtime quantization on GPU only supports S8S8.
+
+[4] ort__quantization#008 | Quantize ONNX models > Quantizing an ONNX model > <a name="qdqdebug"></a>Quantization Debugging
+In summary, ONNX Runtimes provides Python APIs for matching up corresponding weights and activation
+tensors between a float32 model and its quantized counterpart. This allows the user to easily
+compare them to locate where are the biggest differences.
+
+Model optimization during quantization creates difficulties for this debugging process though,
+since it may changes the computation graph in a significant way, resulting in a quantized model
+that is drastically different from the original. This makes it hard to match up corresponding
+tensors from the two models. As a result, we recommend performing model optimization during
+pre-processing instead of the quantization process.
+
+--- ANSWERS, condition R ---
+RA: In ONNX Runtime quantization, floating point zero must be exactly representable in the quantization space because zero padding is used in many CNNs. If zero cannot be uniquely represented, it can lead to accuracy errors.
+RB: In ONNX Runtime quantization, the floating point zero must be exactly representable in the quantization space to avoid accuracy errors. If the floating point zero value cannot be uniquely represented after quantization, it can lead to inaccuracies in the model's performance.
+--- ORACLE CONTEXT (condition O) = ['ort__quantization#000']; already shown above ---
+--- ANSWERS, condition O ---
+OA: In ONNX Runtime quantization, the floating point zero must be exactly representable in the quantization space because zero padding is commonly used in many CNNs. If zero cannot be uniquely represented, it can lead to accuracy errors in the model's performance.
+OB: In ONNX Runtime quantization, the floating point zero must be exactly representable in the quantization space to avoid accuracy errors. This is because zero padding is used in many CNNs, and if zero cannot be represented uniquely after quantization, it can lead to incorrect results.
+
+##### Q03 [fact]
+QUESTION: Which TFLite post-training quantization method is recommended as a starting point, and why?
+GOLD: Dynamic range quantization, because it reduces memory usage and speeds up computation without requiring a representative dataset for calibration.
+
+--- RETRIEVED CONTEXT (what the model saw in condition R) ---
+[1] tflite__post_training_integer_quant#013 | Post-training integer quantization > Run the TensorFlow Lite models
+First, we need a function that runs inference with a given model and images, and then returns the predictions:
+
+```python
+# Helper function to run inference on a TFLite model
+def run_tflite_model(tflite_file, test_image_indices):
+  global test_images
+
+  # Initialize the interpreter
+  interpreter = tf.lite.Interpreter(model_path=str(tflite_file))
+  interpreter.allocate_tensors()
+
+  input_details = interpreter.get_input_details()[0]
+  output_details = interpreter.get_output_details()[0]
+
+  predictions = np.zeros((len(test_image_indices),), dtype=int)
+  for i, test_image_index in enumerate(test_image_indices):
+    test_image = test_images[test_image_index]
+
+    # Check if the input type is quantized, then rescale input data to uint8
+    if input_details['dtype'] == np.uint8:
+      input_scale, input_zero_point = input_details["quantization"]
+      test_image = test_image / input_scale + input_zero_point
+
+    test_image = np.expand_dims(test_image, axis=0).astype(input_details["dtype"])
+    interpreter.set_tensor(input_details["index"], test_image)
+    interpreter.invoke()
+    output = interpreter.get_tensor(output_details["index"])[0]
+
+    predictions[i] = output.argmax()
+
+  return predictions
+```
+
+[2] tflite__post_training_quant#002 | Post-training dynamic range quantization > Overview
+Overview
+
+[TensorFlow Lite](https://www.tensorflow.org/lite/) now supports
+converting weights to 8-bit precision as part of model conversion from
+tensorflow graphdefs to TensorFlow Lite's flat buffer format. Dynamic range quantization achieves a 4x reduction in the model size. In addition, TFLite supports on-the-fly quantization and dequantization of activations to allow for:
+
+1.  Using quantized kernels for faster implementation when available.
+2.  Mixing of floating-point kernels with quantized kernels for different parts
+    of the graph.
+
+The activations are always stored in floating point. For ops that
+support quantized kernels, the activations are quantized to 8 bits of precision
+dynamically prior to processing and are de-quantized to float precision after
+processing. Depending on the model being converted, this can give a speedup over
+pure floating point computation.
+
+In contrast to
+[quantization aware training](https://github.com/tensorflow/tensorflow/tree/r1.14/tensorflow/contrib/quantize)
+, the weights are quantized post training and the activations are quantized dynamically 
+at inference in this method.
+Therefore, the model weights are not retrained to compensate for quantization
+induced errors. It is important to check the accuracy of the quantized model to
+ensure that the degradation is acceptable.
+
+This tutorial trains an MNIST model from scratch, checks its accuracy in
+TensorFlow, and then converts the model into a Tensorflow Lite flatbuffer
+with dynamic range quantization. Finally, it checks the
+accuracy of the converted model and compares it to the original float model.
+
+[3] tflite__post_training_quantization#000 | Post-training quantization
+Post-training quantization
+
+Post-training quantization is a conversion technique that can reduce model size
+while also improving CPU and hardware accelerator latency, with little
+degradation in model accuracy. You can quantize an already-trained float
+TensorFlow model when you convert it to TensorFlow Lite format using the
+[TensorFlow Lite Converter](../models/convert/).
+
+Note: The procedures on this page require TensorFlow 1.15 or higher.
+
+Optimization Methods
+
+There are several post-training quantization options to choose from. Here is a
+summary table of the choices and the benefits they provide:
+
+| Technique            | Benefits                  | Hardware         |
+| -------------------- | ------------------------- | ---------------- |
+| Dynamic range        | 4x smaller, 2x-3x speedup | CPU              |
+: quantization         :                           :                  :
+| Full integer         | 4x smaller, 3x+ speedup   | CPU, Edge TPU,   |
+: quantization         :                           : Microcontrollers :
+| Float16 quantization | 2x smaller, GPU           | CPU, GPU         |
+:                      : acceleration              :                  :
+
+The following decision tree can help determine which post-training quantization
+method is best for your use case:
+
+![post-training optimization options](images/optimization.jpg)
+
+[4] tflite__post_training_quant#005 | Post-training dynamic range quantization > Run the TFLite models
+Run the TFLite models
+
+Run the TensorFlow Lite model using the Python TensorFlow Lite
+Interpreter.
+
+Load the model into an interpreter
+
+```python
+interpreter = tf.lite.Interpreter(model_path=str(tflite_model_file))
+interpreter.allocate_tensors()
+```
+
+```python
+interpreter_quant = tf.lite.Interpreter(model_path=str(tflite_model_quant_file))
+interpreter_quant.allocate_tensors()
+```
+
+Test the model on one image
+
+```python
+test_image = np.expand_dims(test_images[0], axis=0).astype(np.float32)
+
+input_index = interpreter.get_input_details()[0]["index"]
+output_index = interpreter.get_output_details()[0]["index"]
+
+interpreter.set_tensor(input_index, test_image)
+interpreter.invoke()
+predictions = interpreter.get_tensor(output_index)
+```
+
+```python
+import matplotlib.pylab as plt
+
+plt.imshow(test_images[0])
+template = "True:{true}, predicted:{predict}"
+_ = plt.title(template.format(true= str(test_labels[0]),
+                              predict=str(np.argmax(predictions[0]))))
+plt.grid(False)
+```
+
+--- ANSWERS, condition R ---
+RA: Dynamic range quantization is recommended as a starting point. It reduces the model size by 4x and can provide a 2x-3x speedup on CPUs, making it a good balance between model size reduction and performance improvement.
+RB: The recommended starting point for TFLite post-training quantization is dynamic range quantization. This is because it offers a 4x reduction in model size and a 2x-3x speedup, making it suitable for CPU usage. Additionally, it does not require retraining the model, which is important for ensuring that the degradation in model accuracy is acceptable.
+--- ORACLE CONTEXT (condition O) = ['tflite__post_training_quantization#001']; extra chunks below ---
+tflite__post_training_quantization#001 | Post-training quantization > Dynamic range quantization
+Dynamic range quantization
+
+Dynamic range quantization is a recommended starting point because it provides
+reduced memory usage and faster computation without you having to provide a
+representative dataset for calibration. This type of quantization, statically
+quantizes only the weights from floating point to integer at conversion time,
+which provides 8-bits of precision:
+
+<pre>
+import tensorflow as tf
+converter = tf.lite.TFLiteConverter.from_saved_model(saved_model_dir)
+<b>converter.optimizations = [tf.lite.Optimize.DEFAULT]</b>
+tflite_quant_model = converter.convert()
+</pre>
+
+To further reduce latency during inference, "dynamic-range" operators
+dynamically quantize activations based on their range to 8-bits and perform
+computations with 8-bit weights and activations. This optimization provides
+latencies close to fully fixed-point inferences. However, the outputs are still
+stored using floating point so the increased speed of dynamic-range ops is less
+than a full fixed-point computation.
+
+--- ANSWERS, condition O ---
+OA: Dynamic range quantization is recommended as a starting point because it provides reduced memory usage and faster computation without requiring a representative dataset for calibration.
+OB: Dynamic range quantization is recommended as a starting point for TFLite post-training quantization. This method is suggested because it offers reduced memory usage and faster computation without requiring a representative dataset for calibration. The quantization process only statically quantizes the weights from floating point to integer at conversion time, providing 8-bits of precision.
+
+##### Q04 [fact]
+QUESTION: Why does TFLite full integer quantization require a representative dataset?
+GOLD: Variable tensors such as inputs, activations and outputs cannot be calibrated unless inference is run, so the converter needs sample data to estimate their (min, max) ranges.
+
+--- RETRIEVED CONTEXT (what the model saw in condition R) ---
+[1] tflite__post_training_quantization#002 | Post-training quantization > Full integer quantization
+Full integer quantization
+
+You can get further latency improvements, reductions in peak memory usage, and
+compatibility with integer only hardware devices or accelerators by making sure
+all model math is integer quantized.
+
+For full integer quantization, you need to calibrate or estimate the range, i.e,
+(min, max) of all floating-point tensors in the model. Unlike constant tensors
+such as weights and biases, variable tensors such as model input, activations
+(outputs of intermediate layers) and model output cannot be calibrated unless we
+run a few inference cycles. As a result, the converter requires a representative
+dataset to calibrate them. This dataset can be a small subset (around ~100-500
+samples) of the training or validation data. Refer to the
+`representative_dataset()` function below.
+
+From TensorFlow 2.7 version, you can specify the representative dataset through
+a [signature](../guide/signatures.ipynb) as the following example:
+
+<pre>
+def representative_dataset():
+  for data in dataset:
+    yield {
+      "image": data.image,
+      "bias": data.bias,
+    }
+</pre>
+
+If there are more than one signature in the given TensorFlow model, you can
+specify the multiple dataset by specifying the signature keys:
+
+<pre>
+def representative_dataset():
+  # Feed data set for the "encode" signature.
+  for data in encode_signature_dataset:
+    yield (
+      "encode", {
+        "image": data.image,
+        "bias": data.bias,
+      }
+    )
+
+# Feed data set for the "decode" signature.
+  for data in decode_signature_dataset:
+    yield (
+      "decode", {
+        "image": data.image,
+        "hint": data.hint,
+      },
+    )
+</pre>
+
+[2] tflite__post_training_quantization#008 | Post-training quantization > Integer only: 16-bit activations with 8-bit weights (experimental)
+If 16x8 quantization is not supported for some operators in the model,
+then the model still can be quantized, but unsupported operators kept in float.
+The following option should be added to the target_spec to allow this.
+<pre>
+import tensorflow as tf
+converter = tf.lite.TFLiteConverter.from_saved_model(saved_model_dir)
+converter.representative_dataset = representative_dataset
+converter.optimizations = [tf.lite.Optimize.DEFAULT]
+converter.target_spec.supported_ops = [tf.lite.OpsSet.EXPERIMENTAL_TFLITE_BUILTINS_ACTIVATIONS_INT16_WEIGHTS_INT8,
+<b>tf.lite.OpsSet.TFLITE_BUILTINS</b>]
+tflite_quant_model = converter.convert()
+</pre>
+
+Examples of the use cases where accuracy improvements provided by this
+quantization scheme include:
+
+*   super-resolution,
+*   audio signal processing such as noise cancelling and beamforming,
+*   image de-noising,
+*   HDR reconstruction from a single image.
+
+The disadvantage of this quantization is:
+
+*   Currently inference is noticeably slower than 8-bit full integer due to the
+    lack of optimized kernel implementation.
+*   Currently it is incompatible with the existing hardware accelerated TFLite
+    delegates.
+
+Note: This is an experimental feature.
+
+A tutorial for this quantization mode can be found
+[here](post_training_integer_quant_16x8.ipynb).
+
+[3] tflite__post_training_quantization#005 | Post-training quantization > Full integer quantization > Integer only
+Integer only
+
+*Creating integer only models is a common use case for
+[TensorFlow Lite for Microcontrollers](https://www.tensorflow.org/lite/microcontrollers)
+and [Coral Edge TPUs](https://coral.ai/).*
+
+Note: Starting TensorFlow 2.3.0, we support the `inference_input_type` and
+`inference_output_type` attributes.
+
+Additionally, to ensure compatibility with integer only devices (such as 8-bit
+microcontrollers) and accelerators (such as the Coral Edge TPU), you can enforce
+full integer quantization for all ops including the input and output, by using
+the following steps:
+
+<pre>
+import tensorflow as tf
+converter = tf.lite.TFLiteConverter.from_saved_model(saved_model_dir)
+converter.optimizations = [tf.lite.Optimize.DEFAULT]
+converter.representative_dataset = representative_dataset
+<b>converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]</b>
+<b>converter.inference_input_type = tf.int8</b>  # or tf.uint8
+<b>converter.inference_output_type = tf.int8</b>  # or tf.uint8
+tflite_quant_model = converter.convert()
+</pre>
+
+[4] tflite__quantization_debugger#004 | Inspecting Quantization Errors with Quantization Debugger > Quantization Debugger > Setup
+```python
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import tensorflow as tf
+import tensorflow_datasets as tfds
+import tensorflow_hub as hub
+```
+
+```python
+#@title Boilerplates and helpers
+MODEL_URI = 'https://tfhub.dev/google/imagenet/mobilenet_v3_small_100_224/classification/5'
+
+
+def process_image(data):
+  data['image'] = tf.image.resize(data['image'], (224, 224)) / 255.0
+  return data
+
+
+# Representative dataset
+def representative_dataset(dataset):
+
+  def _data_gen():
+    for data in dataset.batch(1):
+      yield [data['image']]
+
+  return _data_gen
+
+
+def eval_tflite(tflite_model, dataset):
+  """Evaluates tensorflow lite classification model with the given dataset."""
+  interpreter = tf.lite.Interpreter(model_content=tflite_model)
+  interpreter.allocate_tensors()
+
+  input_idx = interpreter.get_input_details()[0]['index']
+  output_idx = interpreter.get_output_details()[0]['index']
+
+  results = []
+
+  for data in representative_dataset(dataset)():
+    interpreter.set_tensor(input_idx, data[0])
+    interpreter.invoke()
+    results.append(interpreter.get_tensor(output_idx).flatten())
+
+  results = np.array(results)
+  gt_labels = np.array(list(dataset.map(lambda data: data['label'] + 1)))
+  accuracy = (
+
+--- ANSWERS, condition R ---
+RA: Full integer quantization in TFLite requires a representative dataset to calibrate the range (min, max) of variable tensors such as model inputs, activations, and outputs, which cannot be calibrated without running inference. This dataset helps ensure compatibility with integer-only hardware and accelerators.
+RB: TFLite full integer quantization requires a representative dataset because variable tensors such as model input, activations (outputs of intermediate layers), and model output cannot be calibrated with a single set of values. These tensors can only be calibrated through a few inference cycles using a representative dataset, which helps in estimating the range (min, max) of these tensors. This calibration is necessary to ensure that the quantization process accurately represents the model's behavior across different inputs.
+--- ORACLE CONTEXT (condition O) = ['tflite__post_training_quantization#002']; already shown above ---
+--- ANSWERS, condition O ---
+OA: TFLite full integer quantization requires a representative dataset because it needs to calibrate the range (min, max) of variable tensors such as model inputs, activations, and outputs, which cannot be estimated beforehand like constant tensors. This dataset helps the quantization process understand the actual data distribution, ensuring better accuracy and efficiency after quantization.
+OB: TFLite full integer quantization requires a representative dataset because variable tensors such as model input, activations, and model output cannot be calibrated with just the model's weights and biases. These tensors need to be calibrated through actual inference cycles, which necessitates a dataset to simulate this process. The representative dataset provides the necessary data points to estimate the range of these tensors, allowing for proper quantization.
+
+##### Q05 [fact]
+QUESTION: Why does the TFLite 8-bit quantization spec force weights to be symmetric with zero-point equal to 0?
+GOLD: Weights are multiplied by dynamic activation values, so a non-zero weight zero-point would add an unavoidable runtime cost; forcing it to 0 avoids that cost.
+
+--- RETRIEVED CONTEXT (what the model saw in condition R) ---
+[1] tflite__quantization_spec#003 | TensorFlow Lite 8-bit quantization specification > Symmetric vs asymmetric
+Symmetric vs asymmetric
+
+Activations are asymmetric: they can have their zero-point anywhere within the
+signed `int8` range `[-128, 127]`. Many activations are asymmetric in nature and
+a zero-point is an relatively inexpensive way to effectively get up to an extra
+binary bit of precision. Since activations are only multiplied by constant
+weights, the constant zero-point value can be optimized pretty heavily.
+
+Weights are symmetric: forced to have zero-point equal to 0. Weight values are
+multiplied by dynamic input and activation values. This means that there is an
+unavoidable runtime cost of multiplying the zero-point of the weight with the
+activation value. By enforcing that zero-point is 0 we can avoid this cost.
+
+Explanation of the math: this is similar to section 2.3 in
+[arXiv:1712.05877](https://arxiv.org/abs/1712.05877), except for the difference
+that we allow the scale values to be per-axis. This generalizes readily, as
+follows:
+
+$A$ is a $m \times n$ matrix of quantized activations. <br />
+$B$ is a $n \times p$ matrix of quantized weights. <br />
+Consider multiplying the $j$th row of $A$, $a_j$ by the $k$th column of
+$B$, $b_k$, both of length $n$. The quantized integer values and
+zero-points values are $q_a$, $z_a$ and $q_b$, $z_b$ respectively.
+
+[2] tflite__quantization_spec#005 | TensorFlow Lite 8-bit quantization specification > Symmetric vs asymmetric
+The \\(\sum_{i=0}^{n} q_{a}^{(i)} z_b\\) term needs to be computed every inference
+since the activation changes every inference. By enforcing weights to be
+symmetric we can remove the cost of this term.
+
+[3] tflite__post_training_quantization#010 | Post-training quantization > Representation for quantized tensors
+Representation for quantized tensors
+
+8-bit quantization approximates floating point values using the following
+formula.
+
+$$real\_value = (int8\_value - zero\_point) \times scale$$
+
+The representation has two main parts:
+
+*   Per-axis (aka per-channel) or per-tensor weights represented by int8 two’s
+    complement values in the range [-127, 127] with zero-point equal to 0.
+
+*   Per-tensor activations/inputs represented by int8 two’s complement values in
+    the range [-128, 127], with a zero-point in range [-128, 127].
+
+For a detailed view of our quantization scheme, please see our
+[quantization spec](./quantization_spec). Hardware vendors who want to plug
+into TensorFlow Lite's delegate interface are encouraged to implement the
+quantization scheme described there.
+
+[4] tflite__post_training_quantization#008 | Post-training quantization > Integer only: 16-bit activations with 8-bit weights (experimental)
+If 16x8 quantization is not supported for some operators in the model,
+then the model still can be quantized, but unsupported operators kept in float.
+The following option should be added to the target_spec to allow this.
+<pre>
+import tensorflow as tf
+converter = tf.lite.TFLiteConverter.from_saved_model(saved_model_dir)
+converter.representative_dataset = representative_dataset
+converter.optimizations = [tf.lite.Optimize.DEFAULT]
+converter.target_spec.supported_ops = [tf.lite.OpsSet.EXPERIMENTAL_TFLITE_BUILTINS_ACTIVATIONS_INT16_WEIGHTS_INT8,
+<b>tf.lite.OpsSet.TFLITE_BUILTINS</b>]
+tflite_quant_model = converter.convert()
+</pre>
+
+Examples of the use cases where accuracy improvements provided by this
+quantization scheme include:
+
+*   super-resolution,
+*   audio signal processing such as noise cancelling and beamforming,
+*   image de-noising,
+*   HDR reconstruction from a single image.
+
+The disadvantage of this quantization is:
+
+*   Currently inference is noticeably slower than 8-bit full integer due to the
+    lack of optimized kernel implementation.
+*   Currently it is incompatible with the existing hardware accelerated TFLite
+    delegates.
+
+Note: This is an experimental feature.
+
+A tutorial for this quantization mode can be found
+[here](post_training_integer_quant_16x8.ipynb).
+
+--- ANSWERS, condition R ---
+RA: The TFLite 8-bit quantization spec forces weights to be symmetric with zero-point equal to 0 to avoid the cost of multiplying the zero-point of the weight with the activation value at runtime. This is explained in the context provided, where it states that by enforcing weights to be symmetric, we can remove the cost of computing the \(\sum_{i=0}^{n} q_{a}^{(i)} z_b\) term every inference.
+RB: The TFLite 8-bit quantization specification forces weights to be symmetric with a zero-point equal to 0 to avoid the runtime cost of multiplying the weight's zero-point with the activation value. This optimization reduces the computational overhead during inference.
+--- ORACLE CONTEXT (condition O) = ['tflite__quantization_spec#003']; already shown above ---
+--- ANSWERS, condition O ---
+OA: The TFLite 8-bit quantization specification forces weights to be symmetric with a zero-point equal to 0 to avoid the runtime cost of multiplying the zero-point of the weight with the activation value. This optimization reduces the computational overhead during inference, as it eliminates an unnecessary multiplication step.
+OB: The TFLite 8-bit quantization spec forces weights to be symmetric with zero-point equal to 0 to avoid an unavoidable runtime cost of multiplying the zero-point of the weight with the activation value. This ensures that the multiplication operation is simplified and more efficient.

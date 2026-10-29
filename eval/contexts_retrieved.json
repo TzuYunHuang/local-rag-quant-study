@@ -1,0 +1,242 @@
+{
+ "Q01": [
+  "ort__quantization#003",
+  "ort__quantization#000",
+  "ort__quantization#008",
+  "ort__quantization#010"
+ ],
+ "Q02": [
+  "ort__quantization#000",
+  "ort__quantization#003",
+  "ort__quantization#010",
+  "ort__quantization#008"
+ ],
+ "Q03": [
+  "tflite__post_training_integer_quant#013",
+  "tflite__post_training_quant#002",
+  "tflite__post_training_quantization#000",
+  "tflite__post_training_quant#005"
+ ],
+ "Q04": [
+  "tflite__post_training_quantization#002",
+  "tflite__post_training_quantization#008",
+  "tflite__post_training_quantization#005",
+  "tflite__quantization_debugger#004"
+ ],
+ "Q05": [
+  "tflite__quantization_spec#003",
+  "tflite__quantization_spec#005",
+  "tflite__post_training_quantization#010",
+  "tflite__post_training_quantization#008"
+ ],
+ "Q06": [
+  "pytorch__qat#007",
+  "pytorch__finetuning#009",
+  "pytorch__finetuning#010",
+  "pytorch__qat#006"
+ ],
+ "Q07": [
+  "pytorch__qat#002",
+  "pytorch__qat#004",
+  "pytorch__finetuning#010",
+  "pytorch__first_quantization_example#006"
+ ],
+ "Q08": [
+  "pytorch__pt2e_quant_ptq#006",
+  "pytorch__pt2e_quant_x86_inductor#001",
+  "pytorch__pt2e_quant_x86_inductor#003",
+  "pytorch__pt2e_quant_x86_inductor#010"
+ ],
+ "Q09": [
+  "tflite__post_training_quantization#000",
+  "tflite__model_optimization#005",
+  "pytorch__qat#000",
+  "tflite__model_optimization#004"
+ ],
+ "Q10": [
+  "ort__quantization#006",
+  "ort__quantization#009",
+  "pytorch__static_quantization#000",
+  "ort__quantization#008"
+ ],
+ "Q11": [
+  "ort__quantization#001",
+  "ort__quantization#002",
+  "ort__quantization#008",
+  "ort__QNN-ExecutionProvider#013"
+ ],
+ "Q12": [
+  "tflite__post_training_quantization#001",
+  "tflite__post_training_quantization#006",
+  "tflite__post_training_quant#002",
+  "tflite__post_training_quant#008"
+ ],
+ "Q13": [
+  "ort__float16#000",
+  "ort__float16#002",
+  "ort__float16#001",
+  "tflite__post_training_float16_quant#005"
+ ],
+ "Q14": [
+  "tflite__model_optimization#007",
+  "tflite__quantization_spec#006",
+  "tflite__post_training_quantization#007",
+  "tflite__post_training_quantization#008"
+ ],
+ "Q15": [
+  "tflite__post_training_quantization#001",
+  "tflite__post_training_quant#002",
+  "tflite__post_training_quant#008",
+  "tflite__post_training_quant#005"
+ ],
+ "Q16": [
+  "tflite__post_training_quantization#008",
+  "tflite__post_training_quantization#007",
+  "tflite__post_training_quantization#002",
+  "tflite__post_training_integer_quant#014"
+ ],
+ "Q17": [
+  "tflite__post_training_quant#008",
+  "tflite__post_training_quant#002",
+  "tflite__post_training_quantization#001",
+  "tflite__post_training_quant#007"
+ ],
+ "Q18": [
+  "tflite__model_optimization#007",
+  "tflite__post_training_integer_quant_16x8#000",
+  "tflite__post_training_quantization#008",
+  "tflite__post_training_integer_quant_16x8#002"
+ ],
+ "Q19": [
+  "tflite__model_optimization#005",
+  "pytorch__qat#020",
+  "pytorch__qat#018",
+  "pytorch__qat#022"
+ ],
+ "Q20": [
+  "tflite__model_optimization#009",
+  "tflite__model_optimization#007",
+  "tflite__model_optimization#008",
+  "tflite__post_training_integer_quant_16x8#000"
+ ],
+ "Q21": [
+  "pytorch__pt2e_quantizer#002",
+  "pytorch__pt2e_quant_ptq#000",
+  "pytorch__pt2e_quant_x86_inductor#001",
+  "pytorch__pt2e_quant_ptq#004"
+ ],
+ "Q22": [
+  "tflite__post_training_quantization#000",
+  "pytorch__pt2e_quant_x86_inductor#006",
+  "pytorch__pt2e_quant_x86_inductor#004",
+  "pytorch__pt2e_quant_ptq#015"
+ ],
+ "Q23": [
+  "pytorch__pt2e_quant_qat#002",
+  "pytorch__pt2e_quant_qat#018",
+  "pytorch__pt2e_quant_qat#016",
+  "pytorch__pt2e_quant_qat#017"
+ ],
+ "Q24": [
+  "pytorch__quantization_overview#005",
+  "pytorch__subclass_basic#000",
+  "pytorch__quantization_overview#006",
+  "pytorch__quantization_overview#001"
+ ],
+ "Q25": [
+  "pytorch__inference#002",
+  "pytorch__torchao_vllm_integration#000",
+  "pytorch__inference#003",
+  "pytorch__torchao_vllm_integration#001"
+ ],
+ "Q26": [
+  "ort__quantization#005",
+  "ort__quantization#004",
+  "ort__quantization#008",
+  "ort__quantization#019"
+ ],
+ "Q27": [
+  "ort__quantization#005",
+  "ort__quantization#004",
+  "ort__quantization#008",
+  "ort__quantization#019"
+ ],
+ "Q28": [
+  "ort__graph-optimizations#000",
+  "ort__graph-optimizations#005",
+  "ort__graph-optimizations#004",
+  "ort__graph-optimizations#002"
+ ],
+ "Q29": [
+  "pytorch__pt2e_quant_x86_inductor#010",
+  "pytorch__pt2e_quant_qat#001",
+  "pytorch__pt2e_quant_qat#000",
+  "tflite__post_training_quantization#000"
+ ],
+ "Q30": [
+  "pytorch__pt2e_quant_x86_inductor#001",
+  "pytorch__pt2e_quant_ptq#000",
+  "pytorch__pt2e_quant_ptq#023",
+  "pytorch__pt2e_quant_ptq#004"
+ ],
+ "Q31": [
+  "tflite__post_training_quantization#004",
+  "tflite__post_training_integer_quant#008",
+  "tflite__post_training_quantization#006",
+  "tflite__post_training_quantization#008"
+ ],
+ "Q32": [
+  "tflite__post_training_quantization#001",
+  "tflite__post_training_quant#002",
+  "tflite__post_training_quantization#008",
+  "tflite__post_training_quantization#006"
+ ],
+ "Q33": [
+  "tflite__quantization_spec#002",
+  "tflite__post_training_quant#002",
+  "tflite__quantization_spec#006",
+  "tflite__post_training_quantization#010"
+ ],
+ "Q34": [
+  "pytorch__inference#000",
+  "pytorch__inference#001",
+  "pytorch__quantization_overview#012",
+  "pytorch__first_quantization_example#002"
+ ],
+ "Q35": [
+  "pytorch__serving#011",
+  "pytorch__serving#010",
+  "pytorch__serving#012",
+  "pytorch__serving#009"
+ ],
+ "Q36": [
+  "pytorch__finetuning#016",
+  "tflite__quantization_debugger#011",
+  "ort__quantization#008",
+  "tflite__quantization_spec#004"
+ ],
+ "Q37": [
+  "pytorch__quantization_overview#001",
+  "pytorch__inference#000",
+  "pytorch__finetuning#005",
+  "tflite__model_optimization#009"
+ ],
+ "Q38": [
+  "pytorch__inference#014",
+  "pytorch__first_quantization_example#005",
+  "ort__quantization#019",
+  "pytorch__first_quantization_example#004"
+ ],
+ "Q39": [
+  "tflite__model_optimization#001",
+  "tflite__model_optimization#005",
+  "pytorch__finetuning#016",
+  "pytorch__serving#011"
+ ],
+ "Q40": [
+  "pytorch__quantization_overview#017",
+  "pytorch__quantization_overview#001",
+  "pytorch__inference#000",
+  "tflite__post_training_quant#002"
+ ]
+}

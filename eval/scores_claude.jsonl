@@ -1,0 +1,296 @@
+{"qid": "Q01", "label": "RA", "model": "q8_0", "mode": "retrieved", "type": "fact", "correct": 0, "grounded": 0, "note": "拒答且聲稱上下文沒有公式（上下文有）", "ctx_label": "yes"}
+{"qid": "Q01", "label": "RB", "model": "q2_k", "mode": "retrieved", "type": "fact", "correct": 2, "grounded": 1, "note": "公式正確", "ctx_label": "yes"}
+{"qid": "Q01", "label": "RC", "model": "q4_k_m", "mode": "retrieved", "type": "fact", "correct": 2, "grounded": 1, "note": "公式正確", "ctx_label": "yes"}
+{"qid": "Q01", "label": "RD", "model": "f16", "mode": "retrieved", "type": "fact", "correct": 0, "grounded": 0, "note": "拒答且聲稱上下文沒有公式（上下文有）", "ctx_label": "yes"}
+{"qid": "Q01", "label": "OA", "model": "q4_k_m", "mode": "oracle", "type": "fact", "correct": 0, "grounded": 1, "note": "拒答（gold 在上下文）", "ctx_label": "yes"}
+{"qid": "Q01", "label": "OB", "model": "q2_k", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "公式正確，後半句「inverse 未提供」略混亂", "ctx_label": "yes"}
+{"qid": "Q01", "label": "OC", "model": "q8_0", "mode": "oracle", "type": "fact", "correct": 0, "grounded": 1, "note": "拒答（gold 在上下文）", "ctx_label": "yes"}
+{"qid": "Q01", "label": "OD", "model": "f16", "mode": "oracle", "type": "fact", "correct": 0, "grounded": 1, "note": "拒答（gold 在上下文）", "ctx_label": "yes"}
+{"qid": "Q02", "label": "RA", "model": "q2_k", "mode": "retrieved", "type": "fact", "correct": 2, "grounded": 1, "note": "零填充與準確度誤差都有", "ctx_label": "yes"}
+{"qid": "Q02", "label": "RB", "model": "q8_0", "mode": "retrieved", "type": "fact", "correct": 1, "grounded": 1, "note": "缺 zero padding 原因", "ctx_label": "yes"}
+{"qid": "Q02", "label": "RC", "model": "f16", "mode": "retrieved", "type": "fact", "correct": 1, "grounded": 1, "note": "缺 zero padding 原因", "ctx_label": "yes"}
+{"qid": "Q02", "label": "RD", "model": "q4_k_m", "mode": "retrieved", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q02", "label": "OA", "model": "q2_k", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "完整，結尾稍冗", "ctx_label": "yes"}
+{"qid": "Q02", "label": "OB", "model": "f16", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q02", "label": "OC", "model": "q4_k_m", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q02", "label": "OD", "model": "q8_0", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q03", "label": "RA", "model": "q8_0", "mode": "retrieved", "type": "fact", "correct": 1, "grounded": 1, "note": "方法對、4x 與 2-3x 有據；缺「不需代表性資料集」（上下文沒有）", "ctx_label": "no"}
+{"qid": "Q03", "label": "RB", "model": "q2_k", "mode": "retrieved", "type": "fact", "correct": 1, "grounded": 1, "note": "同上", "ctx_label": "no"}
+{"qid": "Q03", "label": "RC", "model": "q4_k_m", "mode": "retrieved", "type": "fact", "correct": 1, "grounded": 1, "note": "同上", "ctx_label": "no"}
+{"qid": "Q03", "label": "RD", "model": "f16", "mode": "retrieved", "type": "fact", "correct": 1, "grounded": 1, "note": "同上", "ctx_label": "no"}
+{"qid": "Q03", "label": "OA", "model": "f16", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "no"}
+{"qid": "Q03", "label": "OB", "model": "q4_k_m", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "no"}
+{"qid": "Q03", "label": "OC", "model": "q2_k", "mode": "oracle", "type": "fact", "correct": 1, "grounded": 1, "note": "缺「不需代表性資料集」", "ctx_label": "no"}
+{"qid": "Q03", "label": "OD", "model": "q8_0", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "no"}
+{"qid": "Q04", "label": "RA", "model": "q8_0", "mode": "retrieved", "type": "fact", "correct": 2, "grounded": 1, "note": "變數張量需推論校準、估範圍；「single set of values」措辭略偏", "ctx_label": "yes"}
+{"qid": "Q04", "label": "RB", "model": "f16", "mode": "retrieved", "type": "fact", "correct": 2, "grounded": 1, "note": "同 RA", "ctx_label": "yes"}
+{"qid": "Q04", "label": "RC", "model": "q2_k", "mode": "retrieved", "type": "fact", "correct": 1, "grounded": 0, "note": "首句「cannot be calibrated with the provided dataset」與原文相反；缺推論說明", "ctx_label": "yes"}
+{"qid": "Q04", "label": "RD", "model": "q4_k_m", "mode": "retrieved", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q04", "label": "OA", "model": "q4_k_m", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q04", "label": "OB", "model": "f16", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q04", "label": "OC", "model": "q2_k", "mode": "oracle", "type": "fact", "correct": 1, "grounded": 1, "note": "核心有但缺「需實際推論」，句子混亂", "ctx_label": "yes"}
+{"qid": "Q04", "label": "OD", "model": "q8_0", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q05", "label": "RA", "model": "q2_k", "mode": "retrieved", "type": "fact", "correct": 1, "grounded": 0, "note": "核心對，但「該項只算一次」與原文相反（原文是消除該項）", "ctx_label": "yes"}
+{"qid": "Q05", "label": "RB", "model": "q4_k_m", "mode": "retrieved", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q05", "label": "RC", "model": "f16", "mode": "retrieved", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q05", "label": "RD", "model": "q8_0", "mode": "retrieved", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q05", "label": "OA", "model": "q4_k_m", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q05", "label": "OB", "model": "f16", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q05", "label": "OC", "model": "q2_k", "mode": "oracle", "type": "fact", "correct": 1, "grounded": 0, "note": "核心對，但把「zero-point 便宜、多一位精度」（是 activation 的描述）安到權重上", "ctx_label": "yes"}
+{"qid": "Q05", "label": "OD", "model": "q8_0", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q06", "label": "RA", "model": "q8_0", "mode": "retrieved", "type": "fact", "correct": 1, "grounded": 1, "note": "說是暫時量化到低精度，未明講「取整但不轉型別」；有提到仍以 float32 運算", "ctx_label": "partial"}
+{"qid": "Q06", "label": "RB", "model": "q2_k", "mode": "retrieved", "type": "fact", "correct": 0, "grounded": 0, "note": "只描述 API 流程，沒定義 fake quantization；把 PTQ 誤寫成 PyTorch Quantization", "ctx_label": "partial"}
+{"qid": "Q06", "label": "RC", "model": "f16", "mode": "retrieved", "type": "fact", "correct": 1, "grounded": 1, "note": "同 RA", "ctx_label": "partial"}
+{"qid": "Q06", "label": "RD", "model": "q4_k_m", "mode": "retrieved", "type": "fact", "correct": 1, "grounded": 1, "note": "有 fake quantizer 與 float32 運算，缺「取整不轉型別」", "ctx_label": "partial"}
+{"qid": "Q06", "label": "OA", "model": "f16", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "partial"}
+{"qid": "Q06", "label": "OB", "model": "q2_k", "mode": "oracle", "type": "fact", "correct": 1, "grounded": 1, "note": "有「模擬量化／反量化」，缺「取整但不轉型別」（邊界）", "ctx_label": "partial"}
+{"qid": "Q06", "label": "OC", "model": "q4_k_m", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "partial"}
+{"qid": "Q06", "label": "OD", "model": "q8_0", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "partial"}
+{"qid": "Q07", "label": "RA", "model": "q4_k_m", "mode": "retrieved", "type": "fact", "correct": 1, "grounded": 1, "note": "convert 對；prepare 只說設定模型，缺「在 linear 層插入 fake quantize」", "ctx_label": "yes"}
+{"qid": "Q07", "label": "RB", "model": "q2_k", "mode": "retrieved", "type": "fact", "correct": 2, "grounded": 1, "note": "prepare 與 convert 都對；結尾離題但有據", "ctx_label": "yes"}
+{"qid": "Q07", "label": "RC", "model": "f16", "mode": "retrieved", "type": "fact", "correct": 1, "grounded": 1, "note": "prepare 太籠統", "ctx_label": "yes"}
+{"qid": "Q07", "label": "RD", "model": "q8_0", "mode": "retrieved", "type": "fact", "correct": 1, "grounded": 1, "note": "prepare 太籠統", "ctx_label": "yes"}
+{"qid": "Q07", "label": "OA", "model": "q4_k_m", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q07", "label": "OB", "model": "q2_k", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "完整，fused 說法略偏", "ctx_label": "yes"}
+{"qid": "Q07", "label": "OC", "model": "f16", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q07", "label": "OD", "model": "q8_0", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q08", "label": "RA", "model": "f16", "mode": "retrieved", "type": "fact", "correct": 0, "grounded": 0, "note": "答成單一 quantizer 實例，與問題無關，上下文無此資訊", "ctx_label": "no"}
+{"qid": "Q08", "label": "RB", "model": "q8_0", "mode": "retrieved", "type": "fact", "correct": 0, "grounded": 1, "note": "拒答（前 4 塊確實沒有答案）", "ctx_label": "no"}
+{"qid": "Q08", "label": "RC", "model": "q4_k_m", "mode": "retrieved", "type": "fact", "correct": 0, "grounded": 0, "note": "答成 PT2E 流程", "ctx_label": "no"}
+{"qid": "Q08", "label": "RD", "model": "q2_k", "mode": "retrieved", "type": "fact", "correct": 0, "grounded": 0, "note": "答成 PT2E 流程", "ctx_label": "no"}
+{"qid": "Q08", "label": "OA", "model": "f16", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "torchao", "ctx_label": "no"}
+{"qid": "Q08", "label": "OB", "model": "q8_0", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "torchao", "ctx_label": "no"}
+{"qid": "Q08", "label": "OC", "model": "q2_k", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "torchao", "ctx_label": "no"}
+{"qid": "Q08", "label": "OD", "model": "q4_k_m", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "torchao", "ctx_label": "no"}
+{"qid": "Q09", "label": "RA", "model": "q4_k_m", "mode": "retrieved", "type": "compare", "correct": 2, "grounded": 1, "note": "PTQ 不重訓、QAT 訓練中 fake quantization 且較準", "ctx_label": "yes"}
+{"qid": "Q09", "label": "RB", "model": "q2_k", "mode": "retrieved", "type": "compare", "correct": 2, "grounded": 0, "note": "對比正確；「更複雜耗時」上下文沒有", "ctx_label": "yes"}
+{"qid": "Q09", "label": "RC", "model": "f16", "mode": "retrieved", "type": "compare", "correct": 2, "grounded": 1, "note": "對比正確", "ctx_label": "yes"}
+{"qid": "Q09", "label": "RD", "model": "q8_0", "mode": "retrieved", "type": "compare", "correct": 2, "grounded": 1, "note": "對比正確", "ctx_label": "yes"}
+{"qid": "Q09", "label": "OA", "model": "q2_k", "mode": "oracle", "type": "compare", "correct": 1, "grounded": 0, "note": "把 PTQ 說成量化後再用量化權重訓練，QAT 敘述自相矛盾；有提小網路準度損失", "ctx_label": "yes"}
+{"qid": "Q09", "label": "OB", "model": "q4_k_m", "mode": "oracle", "type": "compare", "correct": 1, "grounded": 0, "note": "把「取整不轉型別」安到 PTQ 上（上下文說 PTQ 會轉型別）；QAT 部分對", "ctx_label": "yes"}
+{"qid": "Q09", "label": "OC", "model": "q8_0", "mode": "oracle", "type": "compare", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q09", "label": "OD", "model": "f16", "mode": "oracle", "type": "compare", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q10", "label": "RA", "model": "q8_0", "mode": "retrieved", "type": "compare", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q10", "label": "RB", "model": "f16", "mode": "retrieved", "type": "compare", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q10", "label": "RC", "model": "q4_k_m", "mode": "retrieved", "type": "compare", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q10", "label": "RD", "model": "q2_k", "mode": "retrieved", "type": "compare", "correct": 1, "grounded": 0, "note": "說 static 較準，前後矛盾", "ctx_label": "yes"}
+{"qid": "Q10", "label": "OA", "model": "q2_k", "mode": "oracle", "type": "compare", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q10", "label": "OB", "model": "q4_k_m", "mode": "oracle", "type": "compare", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q10", "label": "OC", "model": "q8_0", "mode": "oracle", "type": "compare", "correct": 1, "grounded": 1, "note": "說 dynamic 在「量化過程」算參數，應為推論時", "ctx_label": "yes"}
+{"qid": "Q10", "label": "OD", "model": "f16", "mode": "oracle", "type": "compare", "correct": 1, "grounded": 0, "note": "同 OC", "ctx_label": "yes"}
+{"qid": "Q11", "label": "RA", "model": "q2_k", "mode": "retrieved", "type": "compare", "correct": 2, "grounded": 0, "note": "核心對；但「QDQ 較靈活、QOperator 較直接用於 static」上下文沒有", "ctx_label": "yes"}
+{"qid": "Q11", "label": "RB", "model": "q4_k_m", "mode": "retrieved", "type": "compare", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q11", "label": "RC", "model": "f16", "mode": "retrieved", "type": "compare", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q11", "label": "RD", "model": "q8_0", "mode": "retrieved", "type": "compare", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q11", "label": "OA", "model": "q2_k", "mode": "oracle", "type": "compare", "correct": 2, "grounded": 0, "note": "核心對；後半「QDQ 較靈活」等說法上下文沒有，且句子混亂", "ctx_label": "yes"}
+{"qid": "Q11", "label": "OB", "model": "q8_0", "mode": "oracle", "type": "compare", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q11", "label": "OC", "model": "f16", "mode": "oracle", "type": "compare", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q11", "label": "OD", "model": "q4_k_m", "mode": "oracle", "type": "compare", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q12", "label": "RA", "model": "q4_k_m", "mode": "retrieved", "type": "compare", "correct": 1, "grounded": 0, "note": "DR 4x、FP16 半大小對；稱 full integer「需重訓」且速度比較皆無據", "ctx_label": "partial"}
+{"qid": "Q12", "label": "RB", "model": "f16", "mode": "retrieved", "type": "compare", "correct": 1, "grounded": 0, "note": "DR 與 FP16 有據；full integer 敘述（精度損失、硬體少見）無據", "ctx_label": "partial"}
+{"qid": "Q12", "label": "RC", "model": "q2_k", "mode": "retrieved", "type": "compare", "correct": 1, "grounded": 1, "note": "只答 DR 的 4x，沒比較其他兩種（自己說要看情況）", "ctx_label": "partial"}
+{"qid": "Q12", "label": "RD", "model": "q8_0", "mode": "retrieved", "type": "compare", "correct": 1, "grounded": 0, "note": "DR 與 FP16 有據；full integer 「再縮小」無據（自稱 context 沒有）", "ctx_label": "partial"}
+{"qid": "Q12", "label": "OA", "model": "q2_k", "mode": "oracle", "type": "compare", "correct": 0, "grounded": 0, "note": "全部混亂錯誤（如「FI 比 FP16 大 4 倍」）", "ctx_label": "partial"}
+{"qid": "Q12", "label": "OB", "model": "q4_k_m", "mode": "oracle", "type": "compare", "correct": 1, "grounded": 0, "note": "三種數字都對，但多編「FP16 2x-3x GPU speedup」", "ctx_label": "partial"}
+{"qid": "Q12", "label": "OC", "model": "q8_0", "mode": "oracle", "type": "compare", "correct": 2, "grounded": 1, "note": "數字與硬體大致對（略缺 microcontrollers 與 FP16 的 CPU）", "ctx_label": "partial"}
+{"qid": "Q12", "label": "OD", "model": "f16", "mode": "oracle", "type": "compare", "correct": 2, "grounded": 1, "note": "同 OC", "ctx_label": "partial"}
+{"qid": "Q13", "label": "RA", "model": "f16", "mode": "retrieved", "type": "compare", "correct": 1, "grounded": 0, "note": "只講都轉 float16 與 ORT 工具；「TFLite 客製較少」無據；漏細節", "ctx_label": "partial"}
+{"qid": "Q13", "label": "RB", "model": "q4_k_m", "mode": "retrieved", "type": "compare", "correct": 0, "grounded": 1, "note": "拒答（上下文足以回答大部分）", "ctx_label": "partial"}
+{"qid": "Q13", "label": "RC", "model": "q8_0", "mode": "retrieved", "type": "compare", "correct": 1, "grounded": 0, "note": "同 RA", "ctx_label": "partial"}
+{"qid": "Q13", "label": "RD", "model": "q2_k", "mode": "retrieved", "type": "compare", "correct": 1, "grounded": 0, "note": "TFLite 半大小、ORT 半大小＋GPU＋精度損失有；「TFLite 效能不一定提升」為臆測", "ctx_label": "partial"}
+{"qid": "Q13", "label": "OA", "model": "q8_0", "mode": "oracle", "type": "compare", "correct": 0, "grounded": 1, "note": "拒答（上下文有 TFLite 與 ORT float16 的主要資訊）", "ctx_label": "partial"}
+{"qid": "Q13", "label": "OB", "model": "f16", "mode": "oracle", "type": "compare", "correct": 0, "grounded": 1, "note": "拒答", "ctx_label": "partial"}
+{"qid": "Q13", "label": "OC", "model": "q2_k", "mode": "oracle", "type": "compare", "correct": 0, "grounded": 1, "note": "拒答（說沒有直接比較）", "ctx_label": "partial"}
+{"qid": "Q13", "label": "OD", "model": "q4_k_m", "mode": "oracle", "type": "compare", "correct": 0, "grounded": 1, "note": "拒答", "ctx_label": "partial"}
+{"qid": "Q14", "label": "RA", "model": "q8_0", "mode": "retrieved", "type": "compare", "correct": 2, "grounded": 0, "note": "四項取捨皆有；首項「int8 略增大小」敘述混亂", "ctx_label": "yes"}
+{"qid": "Q14", "label": "RB", "model": "f16", "mode": "retrieved", "type": "compare", "correct": 2, "grounded": 0, "note": "同 RA", "ctx_label": "yes"}
+{"qid": "Q14", "label": "RC", "model": "q2_k", "mode": "retrieved", "type": "compare", "correct": 1, "grounded": 1, "note": "有準度、大小、慢；缺與硬體加速 delegate 不相容", "ctx_label": "yes"}
+{"qid": "Q14", "label": "RD", "model": "q4_k_m", "mode": "retrieved", "type": "compare", "correct": 1, "grounded": 0, "note": "稱 16x8 準度不如 int8（錯）；缺不相容", "ctx_label": "yes"}
+{"qid": "Q14", "label": "OA", "model": "q4_k_m", "mode": "oracle", "type": "compare", "correct": 1, "grounded": 1, "note": "有慢與不相容；缺準度提升與大小", "ctx_label": "yes"}
+{"qid": "Q14", "label": "OB", "model": "q2_k", "mode": "oracle", "type": "compare", "correct": 2, "grounded": 0, "note": "四項皆有，被截斷；多編「對即時應用特別有問題」。被 256 tokens 截斷", "ctx_label": "yes"}
+{"qid": "Q14", "label": "OC", "model": "q8_0", "mode": "oracle", "type": "compare", "correct": 1, "grounded": 1, "note": "同 OA", "ctx_label": "yes"}
+{"qid": "Q14", "label": "OD", "model": "f16", "mode": "oracle", "type": "compare", "correct": 1, "grounded": 1, "note": "同 OA", "ctx_label": "yes"}
+{"qid": "Q15", "label": "RA", "model": "f16", "mode": "retrieved", "type": "number", "correct": 1, "grounded": 1, "note": "4x 對；坦承沒給加速倍數", "ctx_label": "partial"}
+{"qid": "Q15", "label": "RB", "model": "q8_0", "mode": "retrieved", "type": "number", "correct": 1, "grounded": 1, "note": "同 RA", "ctx_label": "partial"}
+{"qid": "Q15", "label": "RC", "model": "q4_k_m", "mode": "retrieved", "type": "number", "correct": 1, "grounded": 1, "note": "4x 對；無加速倍數", "ctx_label": "partial"}
+{"qid": "Q15", "label": "RD", "model": "q2_k", "mode": "retrieved", "type": "number", "correct": 1, "grounded": 0, "note": "4x 對；「4x speedup」是編的", "ctx_label": "partial"}
+{"qid": "Q15", "label": "OA", "model": "q4_k_m", "mode": "oracle", "type": "number", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "partial"}
+{"qid": "Q15", "label": "OB", "model": "q2_k", "mode": "oracle", "type": "number", "correct": 1, "grounded": 0, "note": "加速寫成 2x（應為 2x-3x）", "ctx_label": "partial"}
+{"qid": "Q15", "label": "OC", "model": "q8_0", "mode": "oracle", "type": "number", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "partial"}
+{"qid": "Q15", "label": "OD", "model": "f16", "mode": "oracle", "type": "number", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "partial"}
+{"qid": "Q16", "label": "RA", "model": "q8_0", "mode": "retrieved", "type": "number", "correct": 2, "grounded": 1, "note": "約 100-500", "ctx_label": "yes"}
+{"qid": "Q16", "label": "RB", "model": "q2_k", "mode": "retrieved", "type": "number", "correct": 2, "grounded": 1, "note": "100-500，小子集", "ctx_label": "yes"}
+{"qid": "Q16", "label": "RC", "model": "q4_k_m", "mode": "retrieved", "type": "number", "correct": 2, "grounded": 1, "note": "100-500", "ctx_label": "yes"}
+{"qid": "Q16", "label": "RD", "model": "f16", "mode": "retrieved", "type": "number", "correct": 2, "grounded": 1, "note": "100-500", "ctx_label": "yes"}
+{"qid": "Q16", "label": "OA", "model": "q4_k_m", "mode": "oracle", "type": "number", "correct": 2, "grounded": 1, "note": "100-500", "ctx_label": "yes"}
+{"qid": "Q16", "label": "OB", "model": "q8_0", "mode": "oracle", "type": "number", "correct": 2, "grounded": 1, "note": "100-500", "ctx_label": "yes"}
+{"qid": "Q16", "label": "OC", "model": "q2_k", "mode": "oracle", "type": "number", "correct": 2, "grounded": 1, "note": "100-500；後半「若資料集更大」說法無據", "ctx_label": "yes"}
+{"qid": "Q16", "label": "OD", "model": "f16", "mode": "oracle", "type": "number", "correct": 2, "grounded": 1, "note": "100-500", "ctx_label": "yes"}
+{"qid": "Q17", "label": "RA", "model": "f16", "mode": "retrieved", "type": "number", "correct": 0, "grounded": 1, "note": "拒答（答案在上下文）", "ctx_label": "yes"}
+{"qid": "Q17", "label": "RB", "model": "q4_k_m", "mode": "retrieved", "type": "number", "correct": 0, "grounded": 1, "note": "拒答（答案在上下文）", "ctx_label": "yes"}
+{"qid": "Q17", "label": "RC", "model": "q2_k", "mode": "retrieved", "type": "number", "correct": 0, "grounded": 0, "note": "說教程沒給 ResNet 縮小數字（上下文有 171→43 MB），只答 4x", "ctx_label": "yes"}
+{"qid": "Q17", "label": "RD", "model": "q8_0", "mode": "retrieved", "type": "number", "correct": 0, "grounded": 1, "note": "拒答（答案在上下文）", "ctx_label": "yes"}
+{"qid": "Q17", "label": "OA", "model": "f16", "mode": "oracle", "type": "number", "correct": 0, "grounded": 1, "note": "拒答（gold 在上下文）", "ctx_label": "yes"}
+{"qid": "Q17", "label": "OB", "model": "q4_k_m", "mode": "oracle", "type": "number", "correct": 0, "grounded": 1, "note": "拒答（gold 在上下文）", "ctx_label": "yes"}
+{"qid": "Q17", "label": "OC", "model": "q8_0", "mode": "oracle", "type": "number", "correct": 0, "grounded": 1, "note": "拒答（gold 在上下文）", "ctx_label": "yes"}
+{"qid": "Q17", "label": "OD", "model": "q2_k", "mode": "oracle", "type": "number", "correct": 0, "grounded": 1, "note": "拒答（gold 在上下文）", "ctx_label": "yes"}
+{"qid": "Q18", "label": "RA", "model": "q2_k", "mode": "retrieved", "type": "number", "correct": 0, "grounded": 0, "note": "拒答，但編造 CER＝Categorical Cross-Entropy", "ctx_label": "no"}
+{"qid": "Q18", "label": "RB", "model": "q8_0", "mode": "retrieved", "type": "number", "correct": 0, "grounded": 1, "note": "拒答（前 4 塊沒有表格，拒答合理）", "ctx_label": "no"}
+{"qid": "Q18", "label": "RC", "model": "f16", "mode": "retrieved", "type": "number", "correct": 0, "grounded": 1, "note": "拒答（前 4 塊沒有表格，拒答合理）", "ctx_label": "no"}
+{"qid": "Q18", "label": "RD", "model": "q4_k_m", "mode": "retrieved", "type": "number", "correct": 0, "grounded": 1, "note": "拒答（前 4 塊沒有表格，拒答合理）", "ctx_label": "no"}
+{"qid": "Q18", "label": "OA", "model": "q2_k", "mode": "oracle", "type": "number", "correct": 2, "grounded": 1, "note": "三個數字都對，結尾重複", "ctx_label": "no"}
+{"qid": "Q18", "label": "OB", "model": "q4_k_m", "mode": "oracle", "type": "number", "correct": 1, "grounded": 0, "note": "int8、int16 對；說表格沒有 float32（有 6.13%）", "ctx_label": "no"}
+{"qid": "Q18", "label": "OC", "model": "f16", "mode": "oracle", "type": "number", "correct": 2, "grounded": 1, "note": "三個數字都對", "ctx_label": "no"}
+{"qid": "Q18", "label": "OD", "model": "q8_0", "mode": "oracle", "type": "number", "correct": 2, "grounded": 1, "note": "三個數字都對", "ctx_label": "no"}
+{"qid": "Q19", "label": "RA", "model": "q4_k_m", "mode": "retrieved", "type": "number", "correct": 2, "grounded": 1, "note": "三個數字都對", "ctx_label": "yes"}
+{"qid": "Q19", "label": "RB", "model": "f16", "mode": "retrieved", "type": "number", "correct": 2, "grounded": 1, "note": "三個數字都對", "ctx_label": "yes"}
+{"qid": "Q19", "label": "RC", "model": "q2_k", "mode": "retrieved", "type": "number", "correct": 2, "grounded": 1, "note": "三個數字都對", "ctx_label": "yes"}
+{"qid": "Q19", "label": "RD", "model": "q8_0", "mode": "retrieved", "type": "number", "correct": 2, "grounded": 1, "note": "三個數字都對", "ctx_label": "yes"}
+{"qid": "Q19", "label": "OA", "model": "q2_k", "mode": "oracle", "type": "number", "correct": 2, "grounded": 1, "note": "三個數字都對", "ctx_label": "yes"}
+{"qid": "Q19", "label": "OB", "model": "q8_0", "mode": "oracle", "type": "number", "correct": 2, "grounded": 1, "note": "三個數字都對", "ctx_label": "yes"}
+{"qid": "Q19", "label": "OC", "model": "q4_k_m", "mode": "oracle", "type": "number", "correct": 2, "grounded": 1, "note": "三個數字都對", "ctx_label": "yes"}
+{"qid": "Q19", "label": "OD", "model": "f16", "mode": "oracle", "type": "number", "correct": 2, "grounded": 1, "note": "三個數字都對", "ctx_label": "yes"}
+{"qid": "Q20", "label": "RA", "model": "q4_k_m", "mode": "retrieved", "type": "number", "correct": 1, "grounded": 0, "note": "float32 88.81 對；int8 寫成 88.73（那是 int16，int8 為 2.08）", "ctx_label": "yes"}
+{"qid": "Q20", "label": "RB", "model": "q2_k", "mode": "retrieved", "type": "number", "correct": 0, "grounded": 0, "note": "拒答，且聲稱上下文沒有 float32 數字（有）", "ctx_label": "yes"}
+{"qid": "Q20", "label": "RC", "model": "q8_0", "mode": "retrieved", "type": "number", "correct": 1, "grounded": 0, "note": "同 RA", "ctx_label": "yes"}
+{"qid": "Q20", "label": "RD", "model": "f16", "mode": "retrieved", "type": "number", "correct": 1, "grounded": 0, "note": "同 RA", "ctx_label": "yes"}
+{"qid": "Q20", "label": "OA", "model": "q4_k_m", "mode": "oracle", "type": "number", "correct": 0, "grounded": 1, "note": "拒答（gold 在上下文）", "ctx_label": "yes"}
+{"qid": "Q20", "label": "OB", "model": "q2_k", "mode": "oracle", "type": "number", "correct": 0, "grounded": 0, "note": "拒答，且聲稱上下文沒有表格（有）", "ctx_label": "yes"}
+{"qid": "Q20", "label": "OC", "model": "f16", "mode": "oracle", "type": "number", "correct": 0, "grounded": 1, "note": "拒答（gold 在上下文）", "ctx_label": "yes"}
+{"qid": "Q20", "label": "OD", "model": "q8_0", "mode": "oracle", "type": "number", "correct": 0, "grounded": 1, "note": "拒答（gold 在上下文）", "ctx_label": "yes"}
+{"qid": "Q21", "label": "RA", "model": "q8_0", "mode": "retrieved", "type": "fact", "correct": 2, "grounded": 1, "note": "覆蓋率、可程式化、簡化 UX 都有（缺 88% 數字）", "ctx_label": "yes"}
+{"qid": "Q21", "label": "RB", "model": "f16", "mode": "retrieved", "type": "fact", "correct": 2, "grounded": 1, "note": "同 RA", "ctx_label": "yes"}
+{"qid": "Q21", "label": "RC", "model": "q4_k_m", "mode": "retrieved", "type": "fact", "correct": 2, "grounded": 1, "note": "三點都有", "ctx_label": "yes"}
+{"qid": "Q21", "label": "RD", "model": "q2_k", "mode": "retrieved", "type": "fact", "correct": 2, "grounded": 1, "note": "三點都有，但先講 Quantizer 彈性，敘述偏離", "ctx_label": "yes"}
+{"qid": "Q21", "label": "OA", "model": "q8_0", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "三點加 88%／14K", "ctx_label": "yes"}
+{"qid": "Q21", "label": "OB", "model": "q2_k", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 0, "note": "三點對；多編「教程提到可匯出構造顯著更多」", "ctx_label": "yes"}
+{"qid": "Q21", "label": "OC", "model": "q4_k_m", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "三點加 88%", "ctx_label": "yes"}
+{"qid": "Q21", "label": "OD", "model": "f16", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "三點加 88%", "ctx_label": "yes"}
+{"qid": "Q22", "label": "RA", "model": "q4_k_m", "mode": "retrieved", "type": "fact", "correct": 0, "grounded": 0, "note": "答 TensorFlow 1.15（取自 TFLite 塊，與 PT2E 無關）", "ctx_label": "no"}
+{"qid": "Q22", "label": "RB", "model": "q8_0", "mode": "retrieved", "type": "fact", "correct": 0, "grounded": 0, "note": "同 RA", "ctx_label": "no"}
+{"qid": "Q22", "label": "RC", "model": "q2_k", "mode": "retrieved", "type": "fact", "correct": 0, "grounded": 0, "note": "同 RA", "ctx_label": "no"}
+{"qid": "Q22", "label": "RD", "model": "f16", "mode": "retrieved", "type": "fact", "correct": 0, "grounded": 0, "note": "同 RA", "ctx_label": "no"}
+{"qid": "Q22", "label": "OA", "model": "f16", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "torch.export.export", "ctx_label": "no"}
+{"qid": "Q22", "label": "OB", "model": "q2_k", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "torch.export.export 加 Export DB", "ctx_label": "no"}
+{"qid": "Q22", "label": "OC", "model": "q4_k_m", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "torch.export.export", "ctx_label": "no"}
+{"qid": "Q22", "label": "OD", "model": "q8_0", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "torch.export.export", "ctx_label": "no"}
+{"qid": "Q23", "label": "RA", "model": "f16", "mode": "retrieved", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q23", "label": "RB", "model": "q8_0", "mode": "retrieved", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q23", "label": "RC", "model": "q4_k_m", "mode": "retrieved", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q23", "label": "RD", "model": "q2_k", "mode": "retrieved", "type": "fact", "correct": 1, "grounded": 1, "note": "原因對，但沒寫出 move_exported_model_to_eval/train 函式名", "ctx_label": "yes"}
+{"qid": "Q23", "label": "OA", "model": "q2_k", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q23", "label": "OB", "model": "f16", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q23", "label": "OC", "model": "q4_k_m", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q23", "label": "OD", "model": "q8_0", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q24", "label": "RA", "model": "q4_k_m", "mode": "retrieved", "type": "fact", "correct": 2, "grounded": 1, "note": "三個 op 對", "ctx_label": "yes"}
+{"qid": "Q24", "label": "RB", "model": "q8_0", "mode": "retrieved", "type": "fact", "correct": 2, "grounded": 1, "note": "三個 op 對", "ctx_label": "yes"}
+{"qid": "Q24", "label": "RC", "model": "q2_k", "mode": "retrieved", "type": "fact", "correct": 2, "grounded": 1, "note": "三個 op 對，說明較簡", "ctx_label": "yes"}
+{"qid": "Q24", "label": "RD", "model": "f16", "mode": "retrieved", "type": "fact", "correct": 2, "grounded": 1, "note": "三個 op 對", "ctx_label": "yes"}
+{"qid": "Q24", "label": "OA", "model": "q4_k_m", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "三個 op 對", "ctx_label": "yes"}
+{"qid": "Q24", "label": "OB", "model": "f16", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "三個 op 對", "ctx_label": "yes"}
+{"qid": "Q24", "label": "OC", "model": "q8_0", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "三個 op 對", "ctx_label": "yes"}
+{"qid": "Q24", "label": "OD", "model": "q2_k", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "三個 op 對", "ctx_label": "yes"}
+{"qid": "Q25", "label": "RA", "model": "q8_0", "mode": "retrieved", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q25", "label": "RB", "model": "q2_k", "mode": "retrieved", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q25", "label": "RC", "model": "q4_k_m", "mode": "retrieved", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q25", "label": "RD", "model": "f16", "mode": "retrieved", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q25", "label": "OA", "model": "q2_k", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q25", "label": "OB", "model": "q4_k_m", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q25", "label": "OC", "model": "q8_0", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q25", "label": "OD", "model": "f16", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q26", "label": "RA", "model": "q4_k_m", "mode": "retrieved", "type": "fact", "correct": 1, "grounded": 1, "note": "只說難以除錯；缺「圖被大幅改動、難以對齊張量」", "ctx_label": "yes"}
+{"qid": "Q26", "label": "RB", "model": "q8_0", "mode": "retrieved", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q26", "label": "RC", "model": "f16", "mode": "retrieved", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q26", "label": "RD", "model": "q2_k", "mode": "retrieved", "type": "fact", "correct": 2, "grounded": 0, "note": "核心對；多了「確保最佳形狀推論」無據", "ctx_label": "yes"}
+{"qid": "Q26", "label": "OA", "model": "f16", "mode": "oracle", "type": "fact", "correct": 1, "grounded": 1, "note": "只說難以除錯（並提歷史預設），缺圖被改動的原因", "ctx_label": "yes"}
+{"qid": "Q26", "label": "OB", "model": "q4_k_m", "mode": "oracle", "type": "fact", "correct": 1, "grounded": 1, "note": "只說簡化除錯，缺圖被改動的原因", "ctx_label": "yes"}
+{"qid": "Q26", "label": "OC", "model": "q2_k", "mode": "oracle", "type": "fact", "correct": 1, "grounded": 1, "note": "只說難以除錯，缺圖被改動的原因", "ctx_label": "yes"}
+{"qid": "Q26", "label": "OD", "model": "q8_0", "mode": "oracle", "type": "fact", "correct": 1, "grounded": 1, "note": "同 OA", "ctx_label": "yes"}
+{"qid": "Q27", "label": "RA", "model": "q4_k_m", "mode": "retrieved", "type": "fact", "correct": 1, "grounded": 0, "note": "把限制寫反（說「只能輸出大於 2GB」）；「大模型要跳過」對", "ctx_label": "yes"}
+{"qid": "Q27", "label": "RB", "model": "q2_k", "mode": "retrieved", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q27", "label": "RC", "model": "q8_0", "mode": "retrieved", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q27", "label": "RD", "model": "f16", "mode": "retrieved", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q27", "label": "OA", "model": "q2_k", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q27", "label": "OB", "model": "f16", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q27", "label": "OC", "model": "q4_k_m", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q27", "label": "OD", "model": "q8_0", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q28", "label": "RA", "model": "f16", "mode": "retrieved", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q28", "label": "RB", "model": "q2_k", "mode": "retrieved", "type": "fact", "correct": 2, "grounded": 0, "note": "三級與預設都對，但中段自相矛盾（說「只有 Basic 預設開」）", "ctx_label": "yes"}
+{"qid": "Q28", "label": "RC", "model": "q8_0", "mode": "retrieved", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q28", "label": "RD", "model": "q4_k_m", "mode": "retrieved", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q28", "label": "OA", "model": "q4_k_m", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q28", "label": "OB", "model": "q8_0", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q28", "label": "OC", "model": "f16", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q28", "label": "OD", "model": "q2_k", "mode": "oracle", "type": "fact", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q29", "label": "RA", "model": "f16", "mode": "retrieved", "type": "compare", "correct": 1, "grounded": 0, "note": "只講 PTQ 後處理、QAT 訓練中；缺 API 流程；「效能更好」無據", "ctx_label": "partial"}
+{"qid": "Q29", "label": "RB", "model": "q8_0", "mode": "retrieved", "type": "compare", "correct": 1, "grounded": 0, "note": "概念差異對；「QAT 模型更小」錯", "ctx_label": "partial"}
+{"qid": "Q29", "label": "RC", "model": "q4_k_m", "mode": "retrieved", "type": "compare", "correct": 0, "grounded": 1, "note": "拒答（上下文有 QAT 流程）", "ctx_label": "partial"}
+{"qid": "Q29", "label": "RD", "model": "q2_k", "mode": "retrieved", "type": "compare", "correct": 0, "grounded": 0, "note": "混亂：把 QAT 說成 post-training、混入 TFLite 內容；被截斷", "ctx_label": "partial"}
+{"qid": "Q29", "label": "OA", "model": "q2_k", "mode": "oracle", "type": "compare", "correct": 1, "grounded": 0, "note": "概念差異對；稱 PTQ 沒有全域 quantizer（兩者皆有）；缺 prepare_qat_pt2e 等", "ctx_label": "partial"}
+{"qid": "Q29", "label": "OB", "model": "f16", "mode": "oracle", "type": "compare", "correct": 1, "grounded": 1, "note": "只說準備階段不同，沒有 API 名稱", "ctx_label": "partial"}
+{"qid": "Q29", "label": "OC", "model": "q8_0", "mode": "oracle", "type": "compare", "correct": 1, "grounded": 1, "note": "同 OB", "ctx_label": "partial"}
+{"qid": "Q29", "label": "OD", "model": "q4_k_m", "mode": "oracle", "type": "compare", "correct": 1, "grounded": 0, "note": "稱 PTQ 沒有 custom quantizer（錯）", "ctx_label": "partial"}
+{"qid": "Q30", "label": "RA", "model": "q4_k_m", "mode": "retrieved", "type": "compare", "correct": 0, "grounded": 0, "note": "答 PT2E 匯出流程，非遷移指示", "ctx_label": "no"}
+{"qid": "Q30", "label": "RB", "model": "q8_0", "mode": "retrieved", "type": "compare", "correct": 0, "grounded": 0, "note": "同 RA", "ctx_label": "no"}
+{"qid": "Q30", "label": "RC", "model": "f16", "mode": "retrieved", "type": "compare", "correct": 0, "grounded": 0, "note": "同 RA", "ctx_label": "no"}
+{"qid": "Q30", "label": "RD", "model": "q2_k", "mode": "retrieved", "type": "compare", "correct": 0, "grounded": 0, "note": "同 RA", "ctx_label": "no"}
+{"qid": "Q30", "label": "OA", "model": "q8_0", "mode": "oracle", "type": "compare", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "no"}
+{"qid": "Q30", "label": "OB", "model": "q4_k_m", "mode": "oracle", "type": "compare", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "no"}
+{"qid": "Q30", "label": "OC", "model": "q2_k", "mode": "oracle", "type": "compare", "correct": 1, "grounded": 0, "note": "eager 對；FX 部分把 prepare_pt2e／convert_pt2e 寫成 quantize_pt2e 函式", "ctx_label": "no"}
+{"qid": "Q30", "label": "OD", "model": "f16", "mode": "oracle", "type": "compare", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "no"}
+{"qid": "Q31", "label": "RA", "model": "q4_k_m", "mode": "retrieved", "type": "compare", "correct": 2, "grounded": 1, "note": "fallback 可用 float 運算、integer-only 全整數且相容整數裝置；未提輸入輸出仍為 float", "ctx_label": "partial"}
+{"qid": "Q31", "label": "RB", "model": "q2_k", "mode": "retrieved", "type": "compare", "correct": 1, "grounded": 0, "note": "提到 fallback 輸入輸出仍為 float；但說 integer-only 的輸入輸出設為 float16，錯", "ctx_label": "partial"}
+{"qid": "Q31", "label": "RC", "model": "f16", "mode": "retrieved", "type": "compare", "correct": 2, "grounded": 1, "note": "fallback 與 integer-only（不含 float 輸入輸出）對比正確", "ctx_label": "partial"}
+{"qid": "Q31", "label": "RD", "model": "q8_0", "mode": "retrieved", "type": "compare", "correct": 2, "grounded": 0, "note": "對比正確；但稱 integer-only「與某些硬體加速器不相容」無據", "ctx_label": "partial"}
+{"qid": "Q31", "label": "OA", "model": "f16", "mode": "oracle", "type": "compare", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "partial"}
+{"qid": "Q31", "label": "OB", "model": "q4_k_m", "mode": "oracle", "type": "compare", "correct": 2, "grounded": 1, "note": "完整（「更廣泛相容」為推論）", "ctx_label": "partial"}
+{"qid": "Q31", "label": "OC", "model": "q8_0", "mode": "oracle", "type": "compare", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "partial"}
+{"qid": "Q31", "label": "OD", "model": "q2_k", "mode": "oracle", "type": "compare", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "partial"}
+{"qid": "Q32", "label": "RA", "model": "q8_0", "mode": "retrieved", "type": "compare", "correct": 0, "grounded": 1, "note": "拒答（部分資料有，但沒有整張表）", "ctx_label": "partial"}
+{"qid": "Q32", "label": "RB", "model": "f16", "mode": "retrieved", "type": "compare", "correct": 0, "grounded": 1, "note": "拒答（部分資料有，但沒有整張表）", "ctx_label": "partial"}
+{"qid": "Q32", "label": "RC", "model": "q4_k_m", "mode": "retrieved", "type": "compare", "correct": 0, "grounded": 0, "note": "答非所問（講量化精度與重訓，沒回答資料需求），且把 16x8 當成 integer", "ctx_label": "partial"}
+{"qid": "Q32", "label": "RD", "model": "q2_k", "mode": "retrieved", "type": "compare", "correct": 0, "grounded": 0, "note": "混亂錯誤，被截斷", "ctx_label": "partial"}
+{"qid": "Q32", "label": "OA", "model": "q4_k_m", "mode": "oracle", "type": "compare", "correct": 2, "grounded": 1, "note": "四種資料需求完整", "ctx_label": "partial"}
+{"qid": "Q32", "label": "OB", "model": "q8_0", "mode": "oracle", "type": "compare", "correct": 2, "grounded": 1, "note": "四種資料需求完整", "ctx_label": "partial"}
+{"qid": "Q32", "label": "OC", "model": "q2_k", "mode": "oracle", "type": "compare", "correct": 1, "grounded": 0, "note": "說 integer 量化不需資料（應為未標註代表性樣本）", "ctx_label": "partial"}
+{"qid": "Q32", "label": "OD", "model": "f16", "mode": "oracle", "type": "compare", "correct": 2, "grounded": 1, "note": "四種資料需求完整", "ctx_label": "partial"}
+{"qid": "Q33", "label": "RA", "model": "q4_k_m", "mode": "retrieved", "type": "compare", "correct": 2, "grounded": 1, "note": "per-tensor 與 per-axis 定義對（未提輸出通道、準度）", "ctx_label": "yes"}
+{"qid": "Q33", "label": "RB", "model": "q2_k", "mode": "retrieved", "type": "compare", "correct": 2, "grounded": 1, "note": "同 RA", "ctx_label": "yes"}
+{"qid": "Q33", "label": "RC", "model": "f16", "mode": "retrieved", "type": "compare", "correct": 2, "grounded": 1, "note": "定義對，並提更細粒度", "ctx_label": "yes"}
+{"qid": "Q33", "label": "RD", "model": "q8_0", "mode": "retrieved", "type": "compare", "correct": 2, "grounded": 1, "note": "同 RA", "ctx_label": "yes"}
+{"qid": "Q33", "label": "OA", "model": "f16", "mode": "oracle", "type": "compare", "correct": 2, "grounded": 1, "note": "定義對，並提準度", "ctx_label": "yes"}
+{"qid": "Q33", "label": "OB", "model": "q2_k", "mode": "oracle", "type": "compare", "correct": 2, "grounded": 1, "note": "定義對，並提準度", "ctx_label": "yes"}
+{"qid": "Q33", "label": "OC", "model": "q8_0", "mode": "oracle", "type": "compare", "correct": 2, "grounded": 1, "note": "定義對，並提準度", "ctx_label": "yes"}
+{"qid": "Q33", "label": "OD", "model": "q4_k_m", "mode": "oracle", "type": "compare", "correct": 2, "grounded": 1, "note": "定義對", "ctx_label": "yes"}
+{"qid": "Q34", "label": "RA", "model": "q2_k", "mode": "retrieved", "type": "compare", "correct": 1, "grounded": 0, "note": "兩種定義對；但稱 weight-only 使「activation 較不準」（activation 本來不量化）", "ctx_label": "yes"}
+{"qid": "Q34", "label": "RB", "model": "q4_k_m", "mode": "retrieved", "type": "compare", "correct": 2, "grounded": 0, "note": "定義對；「weight-only 犧牲準度換速度」與原文相反", "ctx_label": "yes"}
+{"qid": "Q34", "label": "RC", "model": "q8_0", "mode": "retrieved", "type": "compare", "correct": 2, "grounded": 0, "note": "同 RB", "ctx_label": "yes"}
+{"qid": "Q34", "label": "RD", "model": "f16", "mode": "retrieved", "type": "compare", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q34", "label": "OA", "model": "f16", "mode": "oracle", "type": "compare", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q34", "label": "OB", "model": "q8_0", "mode": "oracle", "type": "compare", "correct": 1, "grounded": 1, "note": "weight-only 對；dynamic 只說 weight 被量化，漏輸入也量化", "ctx_label": "yes"}
+{"qid": "Q34", "label": "OC", "model": "q4_k_m", "mode": "oracle", "type": "compare", "correct": 2, "grounded": 1, "note": "完整", "ctx_label": "yes"}
+{"qid": "Q34", "label": "OD", "model": "q2_k", "mode": "oracle", "type": "compare", "correct": 1, "grounded": 0, "note": "稱 weight-only 也改 activation，錯", "ctx_label": "yes"}
+{"qid": "Q35", "label": "RA", "model": "q8_0", "mode": "retrieved", "type": "unanswerable", "correct": 2, "grounded": 1, "note": "正確拒答", "ctx_label": "n/a"}
+{"qid": "Q35", "label": "RB", "model": "q2_k", "mode": "retrieved", "type": "unanswerable", "correct": 0, "grounded": 0, "note": "幻覺：把 ExecuTorch iOS .pte 說明當成 llama.cpp 執行方式", "ctx_label": "n/a"}
+{"qid": "Q35", "label": "RC", "model": "q4_k_m", "mode": "retrieved", "type": "unanswerable", "correct": 2, "grounded": 1, "note": "正確拒答", "ctx_label": "n/a"}
+{"qid": "Q35", "label": "RD", "model": "f16", "mode": "retrieved", "type": "unanswerable", "correct": 2, "grounded": 1, "note": "正確拒答", "ctx_label": "n/a"}
+{"qid": "Q36", "label": "RA", "model": "f16", "mode": "retrieved", "type": "unanswerable", "correct": 2, "grounded": 1, "note": "正確拒答", "ctx_label": "n/a"}
+{"qid": "Q36", "label": "RB", "model": "q2_k", "mode": "retrieved", "type": "unanswerable", "correct": 2, "grounded": 1, "note": "改寫式正確拒答", "ctx_label": "n/a"}
+{"qid": "Q36", "label": "RC", "model": "q8_0", "mode": "retrieved", "type": "unanswerable", "correct": 2, "grounded": 1, "note": "正確拒答", "ctx_label": "n/a"}
+{"qid": "Q36", "label": "RD", "model": "q4_k_m", "mode": "retrieved", "type": "unanswerable", "correct": 2, "grounded": 1, "note": "正確拒答", "ctx_label": "n/a"}
+{"qid": "Q37", "label": "RA", "model": "q2_k", "mode": "retrieved", "type": "unanswerable", "correct": 2, "grounded": 0, "note": "拒答，但編造 AWQ＝Weight Quantization", "ctx_label": "n/a"}
+{"qid": "Q37", "label": "RB", "model": "f16", "mode": "retrieved", "type": "unanswerable", "correct": 2, "grounded": 1, "note": "正確拒答", "ctx_label": "n/a"}
+{"qid": "Q37", "label": "RC", "model": "q8_0", "mode": "retrieved", "type": "unanswerable", "correct": 2, "grounded": 1, "note": "正確拒答", "ctx_label": "n/a"}
+{"qid": "Q37", "label": "RD", "model": "q4_k_m", "mode": "retrieved", "type": "unanswerable", "correct": 2, "grounded": 1, "note": "正確拒答", "ctx_label": "n/a"}
+{"qid": "Q38", "label": "RA", "model": "q4_k_m", "mode": "retrieved", "type": "unanswerable", "correct": 2, "grounded": 1, "note": "正確拒答", "ctx_label": "n/a"}
+{"qid": "Q38", "label": "RB", "model": "f16", "mode": "retrieved", "type": "unanswerable", "correct": 2, "grounded": 1, "note": "正確拒答", "ctx_label": "n/a"}
+{"qid": "Q38", "label": "RC", "model": "q8_0", "mode": "retrieved", "type": "unanswerable", "correct": 2, "grounded": 1, "note": "正確拒答", "ctx_label": "n/a"}
+{"qid": "Q38", "label": "RD", "model": "q2_k", "mode": "retrieved", "type": "unanswerable", "correct": 0, "grounded": 0, "note": "幻覺：把 torchao 玩具模型 1.03x 說成 Apple Neural Engine 的加速", "ctx_label": "n/a"}
+{"qid": "Q39", "label": "RA", "model": "f16", "mode": "retrieved", "type": "unanswerable", "correct": 2, "grounded": 1, "note": "正確拒答", "ctx_label": "n/a"}
+{"qid": "Q39", "label": "RB", "model": "q2_k", "mode": "retrieved", "type": "unanswerable", "correct": 2, "grounded": 0, "note": "拒答，但編造 int8＝(intelligent) quantization", "ctx_label": "n/a"}
+{"qid": "Q39", "label": "RC", "model": "q4_k_m", "mode": "retrieved", "type": "unanswerable", "correct": 2, "grounded": 1, "note": "正確拒答", "ctx_label": "n/a"}
+{"qid": "Q39", "label": "RD", "model": "q8_0", "mode": "retrieved", "type": "unanswerable", "correct": 2, "grounded": 1, "note": "正確拒答", "ctx_label": "n/a"}
+{"qid": "Q40", "label": "RA", "model": "q2_k", "mode": "retrieved", "type": "unanswerable", "correct": 2, "grounded": 0, "note": "拒答，但編造 GPTQ＝Generalized Partitioned Quantization", "ctx_label": "n/a"}
+{"qid": "Q40", "label": "RB", "model": "q4_k_m", "mode": "retrieved", "type": "unanswerable", "correct": 2, "grounded": 1, "note": "正確拒答", "ctx_label": "n/a"}
+{"qid": "Q40", "label": "RC", "model": "q8_0", "mode": "retrieved", "type": "unanswerable", "correct": 2, "grounded": 1, "note": "正確拒答", "ctx_label": "n/a"}
+{"qid": "Q40", "label": "RD", "model": "f16", "mode": "retrieved", "type": "unanswerable", "correct": 2, "grounded": 1, "note": "正確拒答", "ctx_label": "n/a"}

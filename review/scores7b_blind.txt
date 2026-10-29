@@ -1,0 +1,148 @@
+Q01 RA 2 1 公式正確
+Q01 RB 0 0 說沒有公式且聲稱上下文沒有反向（上下文有）
+Q01 OA 0 1 拒答（公式在上下文）
+Q01 OB 2 1 公式正確
+Q02 RA 2 1 零填充與準度錯誤都有
+Q02 RB 1 1 缺 zero padding 原因
+Q02 OA 2 1 完整
+Q02 OB 2 1 完整
+Q03 RA 1 1 答 dynamic range 但缺不需代表性資料集的理由
+Q03 RB 1 1 缺不需代表性資料集；理由改述成不需重訓
+Q03 OA 2 1 與標準答案一致
+Q03 OB 2 1 一致
+Q04 RA 2 1 核心對，相容性說法稍偏
+Q04 RB 2 0 「single set of values」與「適用不同輸入」為上下文沒有
+Q04 OA 2 0 多了「更好準度與效率」
+Q04 OB 2 1 完整
+Q05 RA 2 1 正確
+Q05 RB 2 1 正確
+Q05 OA 2 1 正確
+Q05 OB 2 1 正確
+Q06 RA 1 0 沒說不轉型別的取整；多了「numerical stability」「更適合部署」
+Q06 RB 1 1 說模擬量化且 float32 訓練，缺取整不轉型別
+Q06 OA 2 1 與標準答案一致
+Q06 OB 2 1 一致
+Q07 RA 2 1 prepare 與 convert 正確
+Q07 RB 1 1 prepare 只講 QATConfig 設定，沒講插入 fake quantize 運算
+Q07 OA 2 1 完整
+Q07 OB 2 1 完整
+Q08 RA 0 1 拒答（答案在 gold 塊，retrieved 沒有）
+Q08 RB 0 0 答成 PT2E 流程
+Q08 OA 2 1 torchao
+Q08 OB 2 1 torchao
+Q09 RA 2 1 差異對，缺 PTQ 準度損失
+Q09 RB 2 1 差異對
+Q09 OA 2 1 含 PTQ 準度損失
+Q09 OB 2 1 含準度損失
+Q10 RA 2 1 動靜態差異對
+Q10 RB 2 1 對
+Q10 OA 1 1 說 dynamic 在量化過程算參數，應為推論時
+Q10 OB 2 1 對
+Q11 RA 2 1 QOperator 與 QDQ 都對
+Q11 RB 2 1 對且有細節
+Q11 OA 2 1 對
+Q11 OB 2 1 對
+Q12 RA 1 0 只有 dynamic range 4x 與 float16 半大小；full integer 說「不在上下文」並編「犧牲準度」；缺硬體
+Q12 RB 1 0 full integer「需重訓、較慢」為上下文沒有且錯；缺 speedup 與硬體
+Q12 OA 2 1 三種都對（float16 硬體寫法略模糊）
+Q12 OB 2 1 三種大致都對，full integer 缺 microcontrollers
+Q13 RA 0 1 末尾拒答，前文籠統
+Q13 RB 1 0 只有「都縮小模型、ORT 有工具」；多了「TFLite 工具較少」「大小可能不同」之臆測
+Q13 OA 0 1 拒答（答案在上下文）
+Q13 OB 0 1 拒答
+Q14 RA 1 1 四點都有，但「int8 略增大小」說反
+Q14 RB 2 1 準度、大小、變慢、不相容都對
+Q14 OA 1 1 缺準度提升
+Q14 OB 2 1 準度、變慢、不相容
+Q15 RA 1 1 4x 對；稱沒有 speedup 數字（retrieved 沒給）
+Q15 RB 1 1 4x 對；稱沒量化 speedup
+Q15 OA 2 1 4x 與 2x-3x
+Q15 OB 2 1 4x 與 2x-3x
+Q16 RA 2 1 100-500
+Q16 RB 2 1 100-500
+Q16 OA 2 1 100-500
+Q16 OB 2 1 100-500
+Q17 RA 0 1 拒答（答案在上下文）
+Q17 RB 0 0 聲稱上下文沒有確切縮小量（有 171→43）
+Q17 OA 2 1 171→43 MB 且準度相同
+Q17 OB 0 1 拒答（答案在上下文）
+Q18 RA 0 1 拒答（retrieved 沒撈到表格塊）
+Q18 RB 0 1 拒答（retrieved 沒撈到表格塊）
+Q18 OA 2 0 數字全對；CER 全名 Character Error Rate 為上下文沒有
+Q18 OB 2 1 數字全對
+Q19 RA 2 1 三個數字對
+Q19 RB 2 1 三個數字對
+Q19 OA 2 1 三個數字對
+Q19 OB 2 1 三個數字對
+Q20 RA 1 0 float32 對；int8 寫成 88.73（那是 int16）
+Q20 RB 1 0 float32 對；int8 寫成 88.73（那是 int16）
+Q20 OA 1 0 float32 對；int8 與 int16 混為一談
+Q20 OB 0 1 拒答（答案在上下文）
+Q21 RA 2 1 三點對
+Q21 RB 2 1 三點對
+Q21 OA 2 1 三點與 88% 對
+Q21 OB 2 1 三點與 88% 對
+Q22 RA 0 0 答成 import quantizer 與 TensorFlow 1.15（TFLite 內容誤用）
+Q22 RB 0 0 答成 TensorFlow 1.15（TFLite 內容誤用）
+Q22 OA 2 1 可 export
+Q22 OB 2 1 可 export
+Q23 RA 1 1 原因對，沒寫出函數名
+Q23 RB 2 1 原因與函數都對
+Q23 OA 2 1 對
+Q23 OB 2 1 對
+Q24 RA 2 1 三個 op 對
+Q24 RB 2 1 三個 op 對
+Q24 OA 2 1 對
+Q24 OB 2 1 對
+Q25 RA 2 1 對
+Q25 RB 2 1 對
+Q25 OA 2 1 對
+Q25 OB 2 1 對
+Q26 RA 2 1 除錯困難與圖被改動都有
+Q26 RB 2 1 圖被改動、難以對照都有
+Q26 OA 1 0 只講除錯困難，缺圖被改動；「難以釐清來源」為自行推論
+Q26 OB 1 0 只講除錯困難；把 historical reasons 錯用為建議原因
+Q27 RA 2 1 2GB
+Q27 RB 2 1 2GB
+Q27 OA 2 1 2GB
+Q27 OB 2 1 2GB
+Q28 RA 2 1 三級與預設都對
+Q28 RB 2 1 三級與預設都對
+Q28 OA 2 1 三級與預設都對
+Q28 OB 2 1 三級與預設都對
+Q29 RA 1 0 只有 PTQ vs QAT 的高階差異；多了「更小模型」「用量化權重訓練」無據
+Q29 RB 1 1 高階差異對，缺 prepare_qat_pt2e、move_exported_model_to_eval 等
+Q29 OA 1 0 高階差異對；「改善準度」上下文沒有；缺細節
+Q29 OB 1 1 說差在準備階段，說法含糊，缺函數細節
+Q30 RA 0 1 拒答（答案在 gold 塊，retrieved 沒有）
+Q30 RB 0 0 答成 PT2E 流程並稱為遷移方式
+Q30 OA 1 1 兩種遷移都對，但末尾又寫拒答
+Q30 OB 2 1 兩種遷移與函數都對
+Q31 RA 1 0 float fallback 對；integer-only 缺輸入輸出；多了「可能需額外設定」「提升效率」無據
+Q31 RB 2 1 兩種差異與相容性都對
+Q31 OA 2 1 對，含輸入輸出與裝置
+Q31 OB 2 1 對，含輸入輸出與裝置
+Q32 RA 0 1 拒答（答案在 gold 塊，retrieved 沒有）
+Q32 RB 0 1 拒答（答案在 gold 塊，retrieved 沒有）
+Q32 OA 2 1 四種資料需求都對
+Q32 OB 2 1 四種資料需求都對
+Q33 RA 2 1 差異對，含 accuracy 與 conv
+Q33 RB 2 1 差異對，缺 output channel 與準度
+Q33 OA 2 1 差異對
+Q33 OB 2 1 差異對
+Q34 RA 2 1 對
+Q34 RB 2 0 核心對；「dynamic 平衡、weight-only 犧牲準度換速度」為推論
+Q34 OA 1 1 把 dynamic 說成只轉換權重，沒講輸入也量化
+Q34 OB 2 1 對（輸入與權重都量化 vs 只量化權重）
+Q35 RA 2 1 正確拒答
+Q35 RB 2 1 正確拒答
+Q36 RA 2 1 正確拒答
+Q36 RB 2 1 正確拒答
+Q37 RA 2 1 正確拒答
+Q37 RB 2 1 正確拒答
+Q38 RA 2 1 正確拒答
+Q38 RB 2 1 正確拒答
+Q39 RA 2 1 正確拒答
+Q39 RB 2 1 正確拒答
+Q40 RA 2 1 正確拒答
+Q40 RB 2 1 正確拒答
