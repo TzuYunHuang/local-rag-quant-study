@@ -2,11 +2,27 @@
 import pathlib, matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-# bench numbers: analysis/summary.csv (3B) and bench/7b_q4_k_m.md (7B); quality: D9 / D11 blind scoring (answerable questions, n=34)
+import json, re, statistics as st
 names = ["3B F16", "3B Q8_0", "7B Q4_K_M"]
+tags = ["f16", "q8_0", "7b_q4_k_m"]
 cols = ["#2a78d6", "#eb6834", "#1baf7a"]
-pp = [495.08, 478.11, 186.97]; tg = [13.82, 26.00, 19.22]; rss = [6.41, 3.21, 4.55]
-q_ret = [1.32, 1.29, 1.35]; q_ora = [1.65, 1.62, 1.82]
+
+def bench(tag):  # pp512 / tg128 (tok/s) from llama-bench markdown, RSS (GiB) from /usr/bin/time -l
+    t = (ROOT / f"bench/{tag}.md").read_text()
+    pp = float(re.search(r"pp512\s*\|\s*([\d.]+)", t).group(1))
+    tg = float(re.search(r"tg128\s*\|\s*([\d.]+)", t).group(1))
+    rss = int(re.search(r"(\d+)\s+maximum resident set size", (ROOT / f"bench/{tag}.time").read_text()).group(1)) / 2**30
+    return pp, tg, rss
+pp, tg, rss = (list(v) for v in zip(*[bench(t) for t in tags]))
+
+def load(path): return [json.loads(l) for l in open(ROOT / path, encoding="utf-8") if l.strip()]
+# Quality: mean correctness (0-2) over the 34 answerable questions.
+# 7B and 3B Q8_0 come from the same blind batch (eval/scores_7b.jsonl); 3B F16 from the earlier round (eval/scores_claude.jsonl).
+old, new = load("eval/scores_claude.jsonl"), load("eval/scores_7b.jsonl")
+def q(rows, model, mode):
+    return st.mean(r["correct"] for r in rows if r["model"] == model and r["mode"] == mode and r["type"] != "unanswerable")
+src = [(old, "f16"), (new, "q8_0"), (new, "7b_q4_k_m")]
+q_ret = [q(r, m, "retrieved") for r, m in src]; q_ora = [q(r, m, "oracle") for r, m in src]
 S = "#fcfcfb"; T = "#0b0b0b"; T2 = "#52514e"
 fig, ax = plt.subplots(1, 4, figsize=(14, 4.2), facecolor=S)
 panels = [(pp, "Prefill speed, pp512 (tok/s)", "{:.0f}"), (tg, "Generation speed, tg128 (tok/s)", "{:.1f}"),
