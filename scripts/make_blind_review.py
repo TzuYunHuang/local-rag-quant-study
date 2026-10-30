@@ -35,7 +35,7 @@ for qid in sorted(ev):
             fin = "" if a["finish"] == "stop" else f" [TRUNCATED finish={a['finish']}]"
             L.append(f"{lab}{fin}: {a['answer']}")
     lines_by_q[qid] = "\n".join(L)
-json.dump(key, open(ROOT/"review/key_DO_NOT_READ.json", "w"), indent=1)
+json.dump(key, open(ROOT/"review/key_blind_labels.json", "w"), indent=1)
 qs = sorted(lines_by_q)
 for b in range(0, 40, 5):
     (ROOT/f"review/batch_{b//5+1}.txt").write_text("\n\n".join(lines_by_q[q] for q in qs[b:b+5]), encoding="utf-8")

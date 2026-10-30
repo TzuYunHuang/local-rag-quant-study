@@ -1,7 +1,8 @@
 # Reproduction entry points. Run from the repo root.
-# Paths can be overridden:  make bench LLAMA_CPP_DIR=/path/to/llama.cpp MODEL_DIR=/path/to/models
-LLAMA_CPP_DIR ?= $(HOME)/ai_learning/llama/llama.cpp
-MODEL_DIR     ?= $(HOME)/ai_learning/llama/models
+# Set these for serve / bench / ppl (env vars or on the command line):
+#   make bench LLAMA_CPP_DIR=/path/to/llama.cpp MODEL_DIR=/path/to/models
+LLAMA_CPP_DIR ?=
+MODEL_DIR     ?=
 export LLAMA_CPP_DIR MODEL_DIR
 PY  ?= python
 TAG ?= q4_k_m

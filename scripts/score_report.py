@@ -1,9 +1,9 @@
 """解盲並產出評分報告。
-輸入：review/scores_blind.txt（盲評結果）、review/key_DO_NOT_READ.json（標籤→版本）。
+輸入：review/scores_blind.txt（盲評結果）、review/key_blind_labels.json（標籤→版本）。
 輸出：eval/scores_claude.jsonl（逐答案分數）與各版本統計表。"""
 import json, pathlib, collections, statistics as st
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-key = json.load(open(ROOT/"review/key_DO_NOT_READ.json"))
+key = json.load(open(ROOT/"review/key_blind_labels.json"))
 ev = {json.loads(l)["qid"]: json.loads(l) for l in open(ROOT/"eval/eval_40.jsonl", encoding="utf-8")}
 lab = {json.loads(l)["qid"]: json.loads(l) for l in open(ROOT/"eval/retrieval_labeled.jsonl", encoding="utf-8")}
 rows = []

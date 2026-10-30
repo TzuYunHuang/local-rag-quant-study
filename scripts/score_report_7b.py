@@ -1,9 +1,9 @@
 """Unblind the 7B-vs-Q8_0 blind scoring and print the comparison.
-Input: review/scores7b_blind.txt, review/key7b_DO_NOT_READ.json
+Input: review/scores7b_blind.txt, review/key7b_blind_labels.json
 Output: eval/scores_7b.jsonl + summary tables."""
 import json, pathlib, statistics as st
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-key = json.load(open(ROOT/"review/key7b_DO_NOT_READ.json"))
+key = json.load(open(ROOT/"review/key7b_blind_labels.json"))
 ev = {json.loads(l)["qid"]: json.loads(l) for l in open(ROOT/"eval/eval_40.jsonl", encoding="utf-8")}
 rows = []
 for line in open(ROOT/"review/scores7b_blind.txt", encoding="utf-8"):

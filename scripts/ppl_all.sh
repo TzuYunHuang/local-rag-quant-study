@@ -1,6 +1,8 @@
 #!/bin/bash
-BIN="${LLAMA_CPP_DIR:-$HOME/ai_learning/llama/llama.cpp}/build/bin/llama-perplexity"
-M="${MODEL_DIR:-$HOME/ai_learning/llama/models}"
+: "${LLAMA_CPP_DIR:?Set LLAMA_CPP_DIR to your llama.cpp checkout}"
+: "${MODEL_DIR:?Set MODEL_DIR to the folder with the GGUF files}"
+BIN="$LLAMA_CPP_DIR/build/bin/llama-perplexity"
+M="$MODEL_DIR"
 TXT="${WIKITEXT:-ppl/wikitext-2-raw/wiki.test.raw}"   # run from the repo root
 CHUNKS=""   # 空白＝跑完整份；小測試時由外面傳入 --chunks 2
 for spec in \
