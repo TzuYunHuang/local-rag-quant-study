@@ -1,5 +1,5 @@
-"""把每題的證據片段對應到 chunks.jsonl 裡的 chunk，寫出 gold_chunks，並報告對不上的題目。
-用法：python scripts/check_evalset.py eval/eval_d4.jsonl"""
+"""Map each question's evidence snippet to chunks in chunks.jsonl, write gold_chunks, and report questions that do not match.
+Usage: python scripts/check_evalset.py eval/eval_d4.jsonl"""
 import json, re, sys, pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -19,13 +19,13 @@ for q in qs:
     q["gold_chunks"] = gold
     flag = ""
     if any(not h for h in per_ev.values()):
-        flag = "  <-- 有證據片段找不到"; problems += 1
+        flag = "  <-- evidence snippet not found"; problems += 1
     elif any(len(h) > 3 for h in per_ev.values()):
-        flag = "  <-- 片段太常見，請縮小範圍"; problems += 1
+        flag = "  <-- snippet too common, narrow it down"; problems += 1
     print(f"{q['qid']} [{q['type']:7}] {len(gold)} chunk(s): {gold}{flag}")
 
 out = path.with_name(path.stem + "_resolved.jsonl")
 with open(out, "w", encoding="utf-8") as f:
     for q in qs:
         f.write(json.dumps(q, ensure_ascii=False) + "\n")
-print(f"\n{len(qs)} 題，有問題 {problems} 題；已寫出 {out.name}")
+print(f"\n{len(qs)} questions, {problems} with problems; wrote {out.name}")

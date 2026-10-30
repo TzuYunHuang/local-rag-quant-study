@@ -11,13 +11,13 @@ _index = faiss.read_index(str(ROOT / "index.faiss"))
 _model = SentenceTransformer(MODEL)
 
 def retrieve(query, k=4):
-    """回傳前 k 個最相關的 chunk（含相似度分數）。"""
+    """Return the top-k most relevant chunks (with similarity scores)."""
     q = _model.encode([QUERY_PREFIX + query], normalize_embeddings=True).astype("float32")
     scores, ids = _index.search(q, k)
     return [{**_rows[i], "score": float(s)} for s, i in zip(scores[0], ids[0])]
 
 if __name__ == "__main__":
-    # 截斷檢查：bge 的上限是 512 tokens
+    # truncation check: bge has a 512-token limit
     tk = _model.tokenizer
     lens = [len(tk.encode(f"{r['heading']}\n\n{r['text']}")) for r in _rows]
     print(f"bge tokens: max {max(lens)}, >512: {sum(n > 512 for n in lens)} / {len(lens)}\n")

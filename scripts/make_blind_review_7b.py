@@ -4,7 +4,7 @@ rd = lambda p: [json.loads(l) for l in open(ROOT/p, encoding="utf-8") if l.strip
 chunks = {c["id"]: c for c in rd("chunks.jsonl")}
 ev = {e["qid"]: e for e in rd("eval/eval_40.jsonl")}
 ctx = json.load(open(ROOT/"eval/contexts_retrieved.json"))
-tags = ["7b_q4_k_m", "q8_0"]   # D11: 7B 與 3B Q8_0（同一輪盲評的對照錨點）
+tags = ["7b_q4_k_m", "q8_0"]   # D11: 7B vs 3B Q8_0 (Q8_0 is the anchor scored in the same blind round)
 out = {(t, m): {r["qid"]: r for r in rd(f"outputs/{t}__{m}.jsonl")} for t in tags for m in ("retrieved", "oracle")}
 rng = random.Random(20261029)
 key = {}

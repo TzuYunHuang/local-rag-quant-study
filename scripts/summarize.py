@@ -1,19 +1,19 @@
-"""把 bench / eval / ppl 的數據合成一張總表 analysis/summary.csv（之後所有圖都從這個檔來）。"""
+"""Combine the bench / eval / ppl numbers into one summary table, analysis/summary.csv (all later figures come from this file)."""
 import json, re, csv, pathlib
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 TAGS = ["f16", "q8_0", "q4_k_m", "q2_k"]
 
-def bench(tag):                      # 從 llama-bench 的 markdown 表抓 pp512 / tg128 的 t/s
+def bench(tag):                      # read pp512 / tg128 (t/s) from the llama-bench markdown table
     t = (ROOT/f"bench/{tag}.md").read_text()
     pp = re.search(r"pp512\s*\|\s*([\d.]+)", t).group(1)
     tg = re.search(r"tg128\s*\|\s*([\d.]+)", t).group(1)
     return float(pp), float(tg)
 
-def rss_gib(tag):                    # /usr/bin/time -l 的 maximum resident set size（bytes）
+def rss_gib(tag):                    # maximum resident set size (bytes) from /usr/bin/time -l
     t = (ROOT/f"bench/{tag}.time").read_text()
     return int(re.search(r"(\d+)\s+maximum resident set size", t).group(1)) / 2**30
 
-def ppl(tag):                        # 取 Final estimate 的 PPL 與誤差
+def ppl(tag):                        # take PPL and its error from the Final estimate line
     t = (ROOT/f"ppl/{tag}.log").read_text()
     m = re.search(r"Final estimate: PPL = ([\d.]+) \+/- ([\d.]+)", t)
     return float(m.group(1)), float(m.group(2))

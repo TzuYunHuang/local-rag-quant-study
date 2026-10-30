@@ -1,5 +1,5 @@
-"""挑 10 個答案請使用者獨立判斷「有沒有依據」（答案的事實是否都能在當題上下文找到）。
-5 個 Claude 判無依據、5 個判有依據（含邊界案例），隱藏版本名稱與 Claude 的判斷。"""
+"""Pick 10 answers for the user to judge independently whether they are grounded (every fact in the answer can be found in that question's context).
+5 were judged ungrounded by Claude and 5 grounded (including borderline cases); version names and Claude's judgments are hidden."""
 import json, random, pathlib
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 rd = lambda p: [json.loads(l) for l in open(ROOT/p, encoding="utf-8") if l.strip()]
@@ -7,8 +7,8 @@ chunks = {c["id"]: c for c in rd("chunks.jsonl")}
 ev = {e["qid"]: e for e in rd("eval/eval_40.jsonl")}
 ctx = json.load(open(ROOT/"eval/contexts_retrieved.json"))
 sc = {(r["qid"], r["label"]): r for r in rd("eval/scores_claude.jsonl")}
-SEL = [("Q05","OC"),("Q21","OB"),("Q12","OB"),("Q10","OC"),("Q05","RA"),   # Claude 判 0
-       ("Q07","OB"),("Q01","OB"),("Q31","OB"),("Q03","RB"),("Q33","OB")]   # Claude 判 1
+SEL = [("Q05","OC"),("Q21","OB"),("Q12","OB"),("Q10","OC"),("Q05","RA"),   # Claude: ungrounded
+       ("Q07","OB"),("Q01","OB"),("Q31","OB"),("Q03","RB"),("Q33","OB")]   # Claude: grounded
 rng = random.Random(11); rng.shuffle(SEL)
 out, key = [], {}
 for i, (q, l) in enumerate(SEL, 1):

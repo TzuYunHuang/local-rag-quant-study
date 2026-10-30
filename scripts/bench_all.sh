@@ -14,4 +14,4 @@ for spec in \
   /usr/bin/time -l "$BIN" -m "$M/$file" -ngl 99 -p 512 -n 128 -r 3 -o md > bench/$tag.md 2> bench/$tag.time
   sleep 60
 done
-echo "完成"
+echo "done"

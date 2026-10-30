@@ -4,7 +4,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 RAW = ROOT / "corpus_raw"
 OUT = ROOT / "corpus"
 
-# (本機路徑, 來源網址)
+# (local path, source URL)
 PT = "https://github.com/pytorch/pytorch/blob/main/docs/source/"
 AO = "https://github.com/pytorch/ao/blob/main/docs/source/"
 FILES = [

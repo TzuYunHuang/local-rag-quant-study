@@ -20,7 +20,7 @@ for r in res:
     q = qs[r["qid"]]
     print("=" * 90)
     print(f"{q['qid']} [{q['type']}] {q['question']}")
-    print(f"  標準答案：{q['gold_answer'][:170]}")
+    print(f"  Gold answer: {q['gold_answer'][:170]}")
     for cid in r["gold"]:
         line, sc = best_line(rows[cid]["text"], q["gold_answer"])
         print(f"  GOLD {cid}  ({sc:.2f})  {line[:190]!r}")

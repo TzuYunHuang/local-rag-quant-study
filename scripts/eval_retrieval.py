@@ -1,5 +1,5 @@
 import json, pathlib, statistics, collections
-from retrieve import retrieve   # 與 scripts/ 同目錄
+from retrieve import retrieve   # same folder as scripts/
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 qs = [json.loads(l) for l in open(ROOT / "eval/eval_40.jsonl", encoding="utf-8")]
@@ -24,26 +24,26 @@ with open(ROOT / "eval/retrieval_results.jsonl", "w", encoding="utf-8") as f:
 
 ans = [r for r in results if r["type"] != "unanswerable"]
 pct = lambda xs: f"{100*sum(xs)/len(xs):.0f}%"
-print(f"=== 有答案的題目（{len(ans)} 題）===")
+print(f"=== Answerable questions ({len(ans)}) ===")
 for k in KS:
-    print(f"Top-{k}: 至少命中一塊 {pct([r['any'][k] for r in ans])}   全部命中 {pct([r['all'][k] for r in ans])}")
-print("\n=== 依題型（Top-4）===")
+    print(f"Top-{k}: any hit {pct([r['any'][k] for r in ans])}   all hit {pct([r['all'][k] for r in ans])}")
+print("\n=== By question type (Top-4) ===")
 for t in ("fact", "compare", "number"):
     g = [r for r in ans if r["type"] == t]
-    print(f"{t:8} n={len(g):2}  至少一塊 {pct([r['any'][4] for r in g])}  全部 {pct([r['all'][4] for r in g])}")
+    print(f"{t:8} n={len(g):2}  any {pct([r['any'][4] for r in g])}  all {pct([r['all'][4] for r in g])}")
 
-print("\n=== 沒命中前 4 名的題目 ===")
+print("\n=== Questions not fully hit in the top 4 ===")
 for r in ans:
     if not r["any"][4]:
         print(f"{r['qid']} gold={r['gold']} ranks={r['ranks']} top4={r['top_ids']}")
     elif not r["all"][4]:
-        print(f"{r['qid']} (只中部分) gold={r['gold']} ranks={r['ranks']}")
+        print(f"{r['qid']} (partial hit only) gold={r['gold']} ranks={r['ranks']}")
 
 s_ans = [r["top1_score"] for r in ans]
 s_un = [r["top1_score"] for r in results if r["type"] == "unanswerable"]
-print("\n=== 第 1 名相似度 ===")
-print(f"有答案  中位 {statistics.median(s_ans):.3f}  最低 {min(s_ans):.3f}  最高 {max(s_ans):.3f}")
-print(f"無答案  中位 {statistics.median(s_un):.3f}  最低 {min(s_un):.3f}  最高 {max(s_un):.3f}")
+print("\n=== Top-1 similarity ===")
+print(f"answerable    median {statistics.median(s_ans):.3f}  min {min(s_ans):.3f}  max {max(s_ans):.3f}")
+print(f"unanswerable  median {statistics.median(s_un):.3f}  min {min(s_un):.3f}  max {max(s_un):.3f}")
 for r in results:
     if r["type"] == "unanswerable":
         print(f"  {r['qid']}  {r['top1_score']:.3f}  {r['top_ids'][0]}")

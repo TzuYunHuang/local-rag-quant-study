@@ -9,3 +9,7 @@ ppl/wikitext-2-raw/
 ppl/wikitext-2-raw-v1.zip
 # model files (download separately)
 *.gguf
+
+# one-off review tooling with Chinese translations (kept locally, not tracked)
+scripts/render_grounding_md.py
+review/grounding10.md

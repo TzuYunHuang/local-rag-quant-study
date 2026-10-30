@@ -23,7 +23,7 @@ def clean(text):
     text = re.sub(r"\{%.*?%\}", "", text, flags=re.S)
     text = re.sub(r"^## Contents\s*\n+\s*\*\s*TOC placeholder\s*$", "", text, flags=re.M)
     text = re.sub(r"^\s*\*\s*TOC placeholder\s*$", "", text, flags=re.M)
-    text = re.sub(r"^# .*\n", "", text, count=1, flags=re.M)   # 內文自帶的重複 H1
+    text = re.sub(r"^# .*\n", "", text, count=1, flags=re.M)   # duplicate H1 already present in the body
     text = re.sub(r"\n{3,}", "\n\n", text).strip()
     return (f"# {title}\n\n" if title else "") + text
 

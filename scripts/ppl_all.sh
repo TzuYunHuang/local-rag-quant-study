@@ -4,7 +4,7 @@
 BIN="$LLAMA_CPP_DIR/build/bin/llama-perplexity"
 M="$MODEL_DIR"
 TXT="${WIKITEXT:-ppl/wikitext-2-raw/wiki.test.raw}"   # run from the repo root
-CHUNKS=""   # 空白＝跑完整份；小測試時由外面傳入 --chunks 2
+CHUNKS=""   # empty = run the full set; for a quick test pass --chunks 2 from outside
 for spec in \
   "f16:qwen2.5-3b-instruct-fp16-00001-of-00002.gguf" \
   "q8_0:qwen2.5-3b-instruct-q8_0.gguf" \
@@ -16,4 +16,4 @@ for spec in \
   tail -n 3 ppl/$tag.log
   sleep 60
 done
-echo "完成"
+echo "done"

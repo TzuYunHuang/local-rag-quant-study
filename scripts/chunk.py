@@ -17,7 +17,7 @@ def read_doc(path):
     return (m.group(1) if m else ""), (text[m.end():] if m else text)
 
 def split_sections(text):
-    """依標題切成 [(標題路徑, 標題, 內文)]，程式碼區塊內的 # 不算標題。"""
+    """Split by heading into [(heading path, heading, body)]; a # inside a code block is not a heading."""
     secs, stack, buf, in_code = [], [], [], False
     def flush():
         body = "\n".join(buf).strip()
@@ -42,7 +42,7 @@ def split_sections(text):
     return secs
 
 def blocks(body):
-    """依空行切段落，程式碼區塊保持完整。"""
+    """Split into paragraphs on blank lines, keeping code blocks intact."""
     out, cur, in_code = [], [], False
     for line in body.split("\n"):
         if line.lstrip().startswith("```"):
@@ -89,7 +89,7 @@ rows = []
 for path in sorted(CORPUS.glob("*.md")):
     source, text = read_doc(path)
     secs = [(p, f"{t}\n\n{b}" if t else b) for p, t, b in split_sections(text)]
-    # 相鄰小節合併，直到接近 TARGET
+    # merge adjacent sections until close to TARGET
     groups, cur_path, cur_txt, cur_n = [], None, [], 0
     for p, t in secs:
         k = ntok(t)
