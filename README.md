@@ -175,3 +175,9 @@ The blind-label keys (`review/key*_blind_labels.json`) are kept so the unblindin
 - `analysis/` — summary table and figures
 - `scripts/` — pipeline, evaluation and reporting code
 - `Makefile` — entry points (see Reproduce)
+
+## License
+
+The code and write-up in this repository are released under the [MIT License](LICENSE).
+The documents in `corpus/` are copies of official TFLite, PyTorch/torchao and ONNX Runtime documentation, included only so the experiment can be reproduced.
+They remain under their original licenses; the source URL is recorded at the top of each file.
